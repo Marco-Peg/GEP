@@ -1,0 +1,69 @@
+{
+  "common": {
+    "train_path": "../Data/data_epipred/data_train/processed-dataset.p",
+    "test_path": "../Data/data_epipred/data_test/processed-dataset.p",
+    "val_path": "../Data/data_epipred/data_val/processed-dataset.p",
+    "epochs": 500,
+    "runs": 5,
+    "seeds": [
+      42,
+      40,
+      63,
+      64,
+      65
+    ],
+    "metrics": [
+      "MCC",
+      "auroc",
+      "accuracy",
+      "precision",
+      "recall"
+    ],
+    "dropout": 0.1
+  },
+  "debug": {
+    "wandb_on": false,
+    "epochs": 3,
+    "runs": 2,
+    "cpu": true
+  },
+
+  "lr": {
+    "lr": 0.001,
+    "sub_lr": 0.00001
+  },
+  "lr5": {
+    "lr": 0.00001,
+    "sub_lr": 0.00001
+  },
+  "lr3": {
+    "lr": 0.001,
+    "sub_lr": 0.001
+  },
+  "lr2": {
+    "lr": 0.01,
+    "sub_lr": 0.01
+  },
+  "layer1": {
+    "num_egnns": 1,
+    "update_coors": false
+  },
+  "layer2": {
+    "num_egnns": 2,
+    "update_coors": false
+  },
+  "layer3": {
+    "num_egnns": 3,
+    "update_coors": false
+  },
+  "egnn": {
+    "path": "egnn",
+    "model": "egnn",
+    "feats": [
+      "bio"
+    ],
+    "centered": true,
+    "wandb_name": "",
+    "wandb_tags": []
+  }
+}

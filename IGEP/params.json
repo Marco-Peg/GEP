@@ -1,0 +1,72 @@
+{
+  "common": {
+    "train_path": "../Data/data_epipred/data_train/processed-dataset.p",
+    "test_path": "../Data/data_epipred/data_test/processed-dataset.p",
+    "val_path": "../Data/data_epipred/data_val/processed-dataset.p",
+    "epochs": 500,
+    "runs": 5,
+    "seeds": [
+      42,
+      40,
+      63,
+      64,
+      65
+    ],
+    "metrics": [
+      "MCC",
+      "auroc",
+      "accuracy",
+      "precision",
+      "recall"
+    ]
+  },
+  "debug": {
+    "wandb_on": false,
+    "epochs": 3,
+    "runs": 2,
+    "cpu": true
+  },
+  "lr": {
+    "lr": 0.001,
+    "sub_lr": 0.00001
+  },
+  "lr5": {
+    "lr": 0.00001,
+    "sub_lr": 0.00001
+  },
+  "lr3": {
+    "lr": 0.001,
+    "sub_lr": 0.001
+  },
+  "EPMP": {
+    "path": "EPMP",
+    "model": "EpiEPMP",
+    "feats": [
+      "bio"
+    ],
+    "centered": false,
+    "wandb_name": "",
+    "wandb_tags": []
+  },
+  "EPMP_center": {
+    "path": "EPMP_center",
+    "model": "EpiEPMP",
+    "feats": [
+      "bio",
+      "coords"
+    ],
+    "centered": true,
+    "wandb_name": "",
+    "wandb_tags": []
+  },
+  "egnn": {
+    "path": "egnn",
+    "model": "egnn",
+    "feats": [
+      "bio"
+    ],
+    "centered": true,
+    "wandb_name": "",
+    "wandb_tags": []
+  }
+}
