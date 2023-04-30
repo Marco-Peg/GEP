@@ -18,7 +18,7 @@ metrics_dict = {"MCC": MatthewsCorrCoef, "auroc": AUROC, "accuracy": Accuracy, "
 
 HERE = Path(os.getcwd())
 sys.path.append(str(HERE / '/../'))
-from constants.epi_constants import *
+from IGEP.constants.epi_constants import *
 
 
 def batch_edge_index(dist_mats):

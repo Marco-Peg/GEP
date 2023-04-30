@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from constants.epi_constants import *
+from IGEP.constants.epi_constants import *
 # import models.egnn_layer as eg
 from egnn_pytorch import EGNN
 from torch_geometric.nn import GATConv, GCNConv

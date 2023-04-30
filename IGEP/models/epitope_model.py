@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from constants.epi_constants import *
+from IGEP.constants.epi_constants import *
 from torch_geometric.nn import GCNConv, GATConv
 
 

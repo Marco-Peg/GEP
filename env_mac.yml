@@ -1,0 +1,28 @@
+# OS: MacOS
+channels:
+  - pytorch
+  - conda-forge
+  - anaconda
+  - pyg
+  - plotly
+  - schrodinger
+  - plotly
+dependencies:
+  - python=3.8.*
+  - pip
+  - pytorch = 1.12.0
+  - torchvision
+  - torchaudio
+  - tqdm
+  - torchmetrics
+  - plotly=5.10.0
+  - pip:
+      - robust-laplacian
+      - potpourri3d
+  - scikit-learn
+  - wandb
+  - torchinfo
+  - pandas
+  - biopython
+  - networkx
+  - igl

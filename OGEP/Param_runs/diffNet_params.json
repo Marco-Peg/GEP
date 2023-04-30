@@ -1,0 +1,26 @@
+{
+  "dataset_name": "epiapbscon",
+  "device": "cuda",
+  "input_features": "xyz",
+  "k_eig": 30,
+  "precompute_data": true,
+  "n_epoch": 200,
+  "lr": 1e-3,
+  "decay_every": 50,
+  "decay_rate": 0.5,
+  "bs2": 8,
+  "lloss": 1,
+  "hist_weight": 100,
+  "diffN_widths": [
+    64,
+    128,
+    512
+  ],
+  "seg_widths": [
+    512,
+    256,
+    180,
+    64
+  ],
+  "wandb_on": true
+}

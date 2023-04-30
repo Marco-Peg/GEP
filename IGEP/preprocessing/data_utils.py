@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 import torch
-from preprocessing.epi_preprocess import *
+from IGEP.preprocessing.epi_preprocess import *
 
 
 def load_pickle(file):

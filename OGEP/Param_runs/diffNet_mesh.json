@@ -1,0 +1,51 @@
+{
+  "seed": 42,
+  "dataset_name": "epipred",
+  "device": "cuda",
+  "n_epoch": 2,
+  "lr": 5e-4,
+  "decay_every": 150,
+  "decay_rate": 0.5,
+  "batch_size": 2,
+  "sub_batch_size": 1,
+  "lloss": 1,
+  "pdrop": 0.1,
+  "as_mesh": true,
+  "n_points": 2000,
+  "load_submesh": true,
+  "centered": true,
+  "input_features": [
+    "xyz",
+    "bio"
+  ],
+  "hks_dim": 16,
+  "k_eig": 30,
+  "precompute_data": false,
+  "diffN_widths": [
+    64
+  ],
+  "diffusion_method": "spectral",
+  "seg_widths": [
+    64
+  ],
+  "losses_weight": {
+    "BCE_ab": 1.0,
+    "BCE_ag": 2.0
+  },
+  "metrics": [
+    "MCC",
+    "auroc",
+    "accuracy",
+    "precision",
+    "recall"
+  ],
+  "wandb_on": true,
+  "wandb_data": {
+    "project": "Epitope_geom2",
+    "entity": "epitope_prediction",
+    "name": "mesh",
+    "tags": [],
+    "notes": "DiffNet mesh: ",
+    "policy": "now"
+  }
+}
