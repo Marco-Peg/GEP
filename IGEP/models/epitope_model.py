@@ -5,7 +5,14 @@ from torch_geometric.nn import GCNConv, GATConv
 
 
 class EpiEPMP(torch.nn.Module):
+    """ EpiEPMP model
+    """
     def __init__(self, num_cdr_feats=NUM_CDR_FEATURES, num_ag_feats=NUM_AG_FEATURES, inner_dim=None):
+        """ Initialize EpiEPMP model
+        :param num_cdr_feats: number antibody cdr features
+        :param num_ag_feats:    number antigen features
+        :param inner_dim:    dimension of inner layers
+        """
         super(EpiEPMP, self).__init__()
         self.relu = nn.ReLU()
         if inner_dim is None:
@@ -30,6 +37,16 @@ class EpiEPMP(torch.nn.Module):
         # self.all_bn2 = nn.BatchNorm1d(inner_dim)
 
     def forward(self, x_ab, x_ag, edge_x_ab, edge_x_ag, edge_index_d):
+        """ Forward pass
+
+        :param x_ab:      antibody features
+        :param x_ag:    antigen features
+        :param edge_x_ab:   antibody edges
+        :param edge_x_ag:   antigen edges
+        :param edge_index_d:  distance edges
+        :return:    prediction antibody and antigen
+
+        """
         x_ab = self.gcn(x_ab, edge_x_ab)
         x_ab = self.bn1(x_ab)
         x_ab = self.relu(x_ab)

@@ -16,9 +16,13 @@ models = {"EpiEPMP": EPMPEvaluator, "egnn": EGNNEvaluator}
 
 
 def run_test(args):
+
     """
     Run file for evaluating EpiEPMP on test set
+    :param args: arguments for running the evaluation
+    :return: None
     """
+
     path_results = args.path
     dir = Path(os.getcwd())
     path_new_directory = str(dir) + '/logs/' + str(path_results)
@@ -86,16 +90,19 @@ def json_load(args):
 
 
 def input_parser():
+    """
+    Parse input arguments
+    :return: args object
+    """
     config_parser = argparse.ArgumentParser(add_help=False)
     # JSON support
     config_parser.add_argument('--json-file', help='Configuration JSON file', default=None)
     config_parser.add_argument('--json-keys', nargs='+', help='JSON keys', default=None)
     parser = argparse.ArgumentParser(parents=[config_parser])
-
     parser.add_argument("--path", default=f"")
-    parser.add_argument("--train-path", type=str)
-    parser.add_argument("--test-path", type=str)
-    parser.add_argument("--val-path", type=str)
+    parser.add_argument("--train-path",default = '/Users/clementine/Documents/UCL/lectures/GEP/Processing/data_epipred/data_test/processed-dataset.p', type=str)
+    parser.add_argument("--test-path",default = '/Users/clementine/Documents/UCL/lectures/GEP/Processing/data_epipred/data_test/processed-dataset.p', type=str)
+    parser.add_argument("--val-path",default = '/Users/clementine/Documents/UCL/lectures/GEP/Processing/data_epipred/data_val/processed-dataset.p', type=str)
     parser.add_argument("--model", default=f"EpiEPMP", type=str)
     parser.add_argument('--feats', nargs='+', default=["bio"])
     parser.add_argument("--epochs", default=500, type=int)
@@ -110,18 +117,17 @@ def input_parser():
     parser.add_argument('-m', '--metrics', nargs='+', default=["auroc", "accuracy", "precision", "recall"])
     parser.add_argument("--centered", action='store_true')
     parser.add_argument("--dropout", default=0.5, type=float)
-    ##
     parser.add_argument("--use-adj", action='store_true')
     parser.add_argument("--update-coors", default=True, type=bool)
     parser.add_argument("--inner-dim", default=None, type=int)
     parser.add_argument("--num-egnns", default=1, type=int)
+    parser.add_argument("--cpu", default=True, type=bool)
 
     args, left_argv = config_parser.parse_known_args()
     if args.json_file is not None:
         json_load(args)
     parser.parse_args(left_argv, args)
     return args
-
 
 if __name__ == "__main__":
     dateTimeObj = datetime.now()

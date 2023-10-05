@@ -6,18 +6,23 @@ from IGEP.preprocessing.epi_preprocess import *
 
 
 def load_pickle(file):
+    """     Load pickle file
+    :param file: path to pickle file
+    :return: unpickled file
+    """
     with open(file, 'rb') as f:
         unpickled = pickle.load(f)
     return unpickled
 
 
 def compute_dist_mat(lenghts, ag_lenghts):
+    """     Compute distance matrix
+
+    :param lenghts: lenght of each cdr
+    :param ag_lenghts: lenght of each ag
+    :return: list of distance matrix
     """
-    Return matrices of ones to retrieve bipartite graph between the molecules
-    @param lenghts:
-    @param ag_lenghts:
-    @return:
-    """
+
     n_cdrs = len(lenghts)
     dist_mats_list = []
     for i in range(n_cdrs):
@@ -27,8 +32,15 @@ def compute_dist_mat(lenghts, ag_lenghts):
         dist_mats_list.append(dist_mat)
     return dist_mats_list
 
-
+""" 
 def load_dataset(filename, args):
+   """  """     Load dataset and preprocess it
+
+    :param filename: path to pickle file
+    :param args: arguments
+    :return: return data as a dictionary
+   """  """
+
     unpickled = load_pickle(filename)
 
     unpickled["feature_cdr"] = change_features(unpickled["feature_cdr"])
@@ -60,7 +72,7 @@ def load_dataset(filename, args):
                                                                                         unpickled["coords_cdr"],
                                                                                         unpickled["coords_ag"])
 
-    # Create a list of protein complexes where each protein complex is represented by a dictionary
+    # Create a list of protein complexes where each protein complex is represented by a dictionaryc
     protein_list = []
     for i in range(len(unpickled["features_ag"])):
         protein = {"name": unpickled['pdb'][i], 'cdrs': unpickled["feature_cdr"][i], 'ags': unpickled["features_ag"][i],
@@ -73,23 +85,44 @@ def load_dataset(filename, args):
         if args.centered:
             protein.update({'centered_cdr': coords_cdr_centered[i], 'centered_ag': coords_ag_centered[i], })
         protein_list.append(protein)
+
     # protein_list = create_dictionary_list(unpickled["feature_cdr"], unpickled["features_ag"], unpickled["edges_cdr"], unpickled["edges_ag"],
     #                                             unpickled["lbls_cdr"], unpickled["lbls_ag"], dist_mats, unpickled["coords_cdr"],
     #                                             unpickled["coords_ag"], unpickled["centers_cdr"], unpickled["centers_ag"],unpickled["lbls_cdr_distances"],unpickled["lbls_ag_distances"])
     return protein_list
+    
+"""
 
-
+"""
 def centering_coord(coords_ag_test, coords_ag_centers_test):
+    """ """     Center the coordinates of the antigen
+
+    :param coords_ag_test: xyz postion of the atoms of the antigen
+    :param coords_ag_centers_test:  xyz postion of the center of the antigen
+    :return:    centered coordinates of the antigen
+    """ """
+
     # Create a list of protein complexes where each protein complex is represented by a dictionary
     centered_coords = []
     for i in range(len(coords_ag_test)):
         centered_coord = coords_ag_test[i] - coords_ag_centers_test[i]
         centered_coords.append(centered_coord)
     return centered_coords
+"""
 
-
+"""
 def add_coords_as_features(cdr_list, ag_list, coords_cdr, coords_ag):
+    """ """     Add the coordinates as features to the cdr and antigen features
+
+    :param cdr_list: cdr
+    :param ag_list: antigen
+    :param coords_cdr: xyz postion of the atoms of the cdr
+    :param coords_ag: xyz postion of the atoms of the antigen
+    :return:    cdr and antigen features with the coordinates as features
+    """ """
+
     # Create a list of protein complexes where each protein complex is represented by a dictionary
+
     cdr_list_feat = []
     ag_list_feat = []
     for i in range(len(ag_list)):
@@ -98,11 +131,12 @@ def add_coords_as_features(cdr_list, ag_list, coords_cdr, coords_ag):
         cdr_list_feat.append(concat_cdr)
         ag_list_feat.append(concat_ag)
     return cdr_list_feat, ag_list_feat
-
+"""
 
 def random_rotation_matrix(randgen=None):
     """
     Creates a random rotation matrix.
+
     randgen: if given, a np.random.RandomState instance used for random numbers (for reproducibility)
     """
     # adapted from http://www.realtimerendering.com/resources/GraphicsGems/gemsiii/rand_rotation.c
@@ -140,6 +174,12 @@ def random_rotation_matrix(randgen=None):
 
 
 def random_rotate_points(pts, randgen=None):
+    """
+    :param pts:     (N, 3) tensor of points
+    :param randgen:     if given, a np.random.RandomState instance used for random numbers (for reproducibility)
+    :return:      (N, 3) tensor of points, rotated randomly
+    """
+
     R = random_rotation_matrix(randgen)
     R = torch.from_numpy(R).to(device=pts.device, dtype=pts.dtype)
     return torch.matmul(pts, R)
@@ -149,8 +189,24 @@ import torch.utils.data as data
 
 
 class epipredDataset(data.Dataset):
+    """    Dataset for the Epipred project
+
+    :param filename:    path to the pickle file
+    :param feats:   list of features to use
+    :param random_rotation:     if True, randomly rotate the antigen
+    :param centered:    if True, center the antigen
+    """
+
 
     def __init__(self, filename, feats=["bio"], random_rotation=True, centered=True):
+        """    Dataset for the Epipred project
+
+        :param filename:    path to the pickle file
+        :param feats:   list of features to use
+        :param random_rotation:     if True, randomly rotate the antigen
+        :param centered:    if True, center the antigen
+        """
+
         self.load_data(filename)
         self.random_rotation = random_rotation
         self.centered = centered
@@ -160,10 +216,12 @@ class epipredDataset(data.Dataset):
         raise NotImplementedError("Non implemented")
 
     def load_data(self, filename):
-        self.unpickled = load_pickle(filename)
+        """     Load the data from the pickle file
 
-        # unpickled["feature_cdr"] = change_features(unpickled["feature_cdr"])
-        # unpickled["features_ag"] = change_features(unpickled["features_ag"])
+        :param filename:    path to the pickle file
+        """
+
+        self.unpickled = load_pickle(filename)
         self.unpickled["lengths_cdr"] = torch.tensor(self.unpickled["lengths_cdr"])
         self.unpickled["lengths_ag"] = torch.tensor(self.unpickled["lengths_ag"])
 
@@ -171,6 +229,12 @@ class epipredDataset(data.Dataset):
         self.dist_mats = compute_dist_mat(self.unpickled["lengths_cdr"], self.unpickled["lengths_ag"])
 
     def __getitem__(self, item):
+        """     Get an item from the dataset
+
+        :param item:    index of the item
+        :return:    dictionary containing the data
+        """
+
         protein = {"name": self.unpickled['pdb'][item], 'cdrs': torch.tensor([]), 'ags': torch.tensor([]),
                    'edge_index_cdr': self.unpickled["edges_cdr"][item],
                    'edge_index_ag': self.unpickled["edges_ag"][item],
@@ -212,4 +276,8 @@ class epipredDataset(data.Dataset):
         return protein
 
     def __len__(self):
+        """    Get the length of the dataset
+
+        :return:    length of the dataset
+        """
         return len(self.unpickled['pdb'])

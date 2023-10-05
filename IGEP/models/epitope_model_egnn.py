@@ -8,8 +8,22 @@ from torch_geometric.nn import GATConv, GCNConv
 
 
 class EpiEPMP(torch.nn.Module):
+  """ EpiEPMP model
+
+    Args:
+        num_cdr_feats (int): Number of features in CDR
+        num_ag_feats (int): Number of features in antigen
+        inner_dim (int): Dimension of inner layers
+  """
+
   def __init__(self, num_cdr_feats=NUM_CDR_FEATURES, num_ag_feats=NUM_AG_FEATURES, inner_dim=None, num_egnn=1,
                soft_edges=True, norm_coors=True, dropout=0.5, update_coors=True, use_adj=False):
+    """ Initialize EpiEPMP model
+    :param num_cdr_feats: number antibody cdr features
+    :param num_ag_feats:    number antigen features
+    :param inner_dim:    dimension of inner layers
+    """
+
     super(EpiEPMP, self).__init__()
     self.relu = nn.ReLU()
     self.use_adj = use_adj
@@ -51,6 +65,17 @@ class EpiEPMP(torch.nn.Module):
     # self.all_bn2 = nn.BatchNorm1d(28)
 
   def forward(self, x_ab, x_ag, edge_x_ab, edge_x_ag, edge_index_d, coord_ab, coord_ag, ):
+    """ Forward pass of EpiEPMP model
+    :param x_ab:    antibody features
+    :param x_ag:    antigen features
+    :param edge_x_ab:   antibody edge index
+    :param edge_x_ag:   antigen edge index
+    :param edge_index_d:    distance edge index
+    :param coord_ab:    antibody coordinates
+    :param coord_ag:    antigen coordinates
+    :return:    predicted binding affinity antigen-antibody
+    """
+
     if self.resize:
       x_ab = self.gcn(x_ab, edge_x_ab)
       x_ab = self.abbn0(x_ab)
@@ -116,8 +141,22 @@ class EpiEPMP(torch.nn.Module):
 
 
 class EGNN_shared(EpiEPMP):
+  """ EpiEPMP model with shared EGNN layers
+  """
+
   def __init__(self, num_cdr_feats=NUM_CDR_FEATURES, num_ag_feats=NUM_AG_FEATURES, inner_dim=None, num_egnn=1,
                soft_edges=True, norm_coors=True, dropout=0.5, update_coors=True, use_adj=False):
+    """ Initialize EpiEPMP model
+    :param num_cdr_feats:   number of antibody features
+    :param num_ag_feats:    number of antigen features
+    :param inner_dim:   inner dimension of GCN layers
+    :param num_egnn:    number of EGNN layers
+    :param soft_edges:  whether to use soft edges
+    :param norm_coors:  whether to normalize coordinates
+    :param dropout: dropout rate
+    :param update_coors:    whether to update coordinates
+    :param use_adj: whether to use adjacency matrix
+    """
     super(EGNN_shared, self).__init__(num_cdr_feats, num_ag_feats, inner_dim, num_egnn,
                                       soft_edges, norm_coors, dropout, update_coors, use_adj)
 
@@ -125,6 +164,18 @@ class EGNN_shared(EpiEPMP):
     del self.agbn1
 
   def forward(self, x_ab, x_ag, edge_x_ab, edge_x_ag, edge_index_d, coord_ab, coord_ag, ):
+
+    """ Forward pass
+    :param x_ab:    antibody features
+    :param x_ag:    antigen features
+    :param edge_x_ab:   antibody edge indices
+    :param edge_x_ag:   antigen edge indices
+    :param edge_index_d:    distance edge indices
+    :param coord_ab:    antibody coordinates
+    :param coord_ag:    antigen coordinates
+    :return:    antibody and antigen logits
+    """
+
     if self.resize:
       x_ab = self.gcn(x_ab, edge_x_ab)
       x_ab = self.abbn0(x_ab)
@@ -190,8 +241,20 @@ class EGNN_shared(EpiEPMP):
 
 
 class fullyEGNN_shared(EGNN_shared):
+  """ EpiEPMP model with fully connected layers
+  """
   def __init__(self, num_cdr_feats=NUM_CDR_FEATURES, num_ag_feats=NUM_AG_FEATURES, inner_dim=None,
                soft_edges=True, norm_coors=True, dropout=0.5, update_coors=True):
+    """ Constructor
+    :param num_cdr_feats:   number of antibody features
+    :param num_ag_feats:    number of antigen features
+    :param inner_dim:   inner dimension of the model
+    :param soft_edges:  whether to use soft edges
+    :param norm_coors:  whether to normalize coordinates
+    :param dropout: dropout rate
+    :param update_coors:    whether to update coordinates
+    """
+
     super(EGNN_shared, self).__init__(num_cdr_feats, num_ag_feats, inner_dim)
 
     self.inter = EGNN(dim=self.inner_dim, norm_coors=norm_coors, soft_edges=soft_edges, dropout=dropout,
@@ -200,6 +263,17 @@ class fullyEGNN_shared(EGNN_shared):
                        only_sparse_neighbors=True, update_coors=update_coors)
 
   def forward(self, x_ab, x_ag, edge_x_ab, edge_x_ag, edge_index_d, coord_ab, coord_ag, ):
+    """ Forward pass of the model
+
+    :param x_ab:    antibody features
+    :param x_ag:    antigen features
+    :param edge_x_ab:   antibody edge indices
+    :param edge_x_ag:   antigen edge indices
+    :param edge_index_d:  distance edge indices
+    :param coord_ab:  antibody coordinates
+    :param coord_ag:  antigen coordinates
+    :return:  antibody and antigen logits
+    """
     if self.resize:
       x_ab = self.gcn(x_ab, edge_x_ab)
       x_ab = self.bn1(x_ab)
@@ -260,6 +334,7 @@ class fullyEGNN_shared(EGNN_shared):
 
 
 class EpiEPMPwrap():
+  """ Wrapper for the EpiEPMP model """
 
   def __init__(self):
     self.model = EpiEPMP()

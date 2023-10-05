@@ -22,6 +22,13 @@ from IGEP.constants.epi_constants import *
 
 
 def batch_edge_index(dist_mats):
+    """
+    Creates edge index for batched graphs
+
+    :param dist_mats:   distance matrices
+    :return:        edge index
+    """
+
     # get total number of cdr nodes
     n_cdr_nodes = dist_mats.size()[0]
     dim_x = 0
@@ -47,13 +54,24 @@ def batch_edge_index(dist_mats):
 
 
 def update_metrics(metrics, target, choice):
-    # loss_select = list(metrics.keys())
+    """ Updates the metrics dictionary
+
+    Args:
+       metrics (dict): dictionary of metrics
+       target (torch.Tensor): target tensor
+       choice (torch.Tensor): choice tensor
+    """
     for metric in metrics:
-        metrics[metric].update(choice, target.to(torch.int64))
+       metrics[metric].update(choice, target.to(torch.int64))
     return metrics
 
 
 def compute_metrics(metrics):
+    """ Computes the metrics
+
+    Args: metrics (dict): dictionary of metrics
+
+    """
     computed_loss = dict()
     for metric in metrics:
         computed_loss[metric] = metrics[metric].compute()
@@ -61,11 +79,20 @@ def compute_metrics(metrics):
 
 
 def reset_metrics(metrics):
+    """ Resets the metrics
+
+   Args: metrics (dict): dictionary of metrics
+
+    """
     for metric in metrics:
-        metrics[metric].reset()
+       metrics[metric].reset()
 
 
 def fix_seed(seed):
+    """
+    Fixes the seed for reproducibility
+    Args: seed (int): seed to be fixed
+    """
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -76,6 +103,11 @@ def fix_seed(seed):
 
 def reset_all_weights(model: nn.Module) -> None:
     """
+    Resets all weights in a model
+
+    Args:
+        model (nn.Module): model to reset weights for
+
     refs:
         - https://discuss.pytorch.org/t/how-to-re-set-alll-parameters-in-a-network/20819/6
         - https://stackoverflow.com/questions/63627997/reset-parameters-of-a-neural-network-in-pytorch
@@ -84,6 +116,10 @@ def reset_all_weights(model: nn.Module) -> None:
 
     @torch.no_grad()
     def weight_reset(m: nn.Module):
+        """
+        Resets the weights of a module
+        :param m:   module
+        """
         # - check if the current module has reset_parameters & if it's callabed called it on m
         reset_parameters = getattr(m, "reset_parameters", None)
         if callable(reset_parameters):
@@ -95,6 +131,11 @@ def reset_all_weights(model: nn.Module) -> None:
 
 @torch.no_grad()
 def weight_reset(m: nn.Module):
+    """
+    Resets the weights of a module
+
+    :param m:   module
+    """
     # - check if the current module has reset_parameters & if it's callabed called it on m
     reset_parameters = getattr(m, "reset_parameters", None)
     if callable(reset_parameters):
@@ -105,16 +146,33 @@ import torch.nn.functional as F
 
 
 def compute_BCE(pred, target):
+    """
+    Computes the binary cross entropy loss
+    :param pred:    predicted values
+    :param target:  target values
+    :return:    loss
+
+    """
     loss = F.binary_cross_entropy_with_logits(pred, target, pos_weight=torch.FloatTensor(
         [((target.size(1) * target.size(0)) - float(target.cpu().sum()))
          / float(target.cpu().sum())]).to(target.device))
-
     return loss
 
 
 class Evaluator:
+    """
+    Class for evaluating the model
+    """
 
     def __init__(self, model, args, dtype=torch.float64):
+        """
+        Args:
+
+        :param model:   model to be evaluated
+        :param args:    arguments
+        :param dtype:   data type
+
+        """
         self.model = model
         self.pytorch_total_params = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
         print("Total number of parameters: ", self.pytorch_total_params)
@@ -130,16 +188,32 @@ class Evaluator:
         self.model = self.model.to(self.device)
 
     def load_state_dict(self, state_dict, key="model_state_dict"):
+        """
+        Loads the state dict
+        :param state_dict:  state dict
+        :param key:    key to be loaded
+        """
         self.model.load_state_dict(torch.load(state_dict)[key])
 
     def reset(self, random_seed):
+        """
+        Resets the model
+        :param random_seed:     random seed
+        """
         fix_seed(random_seed)
         self.model.apply(fn=weight_reset)
 
     def define_optimizer(self):
+        """
+        Defines the optimizer
+        """
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.args.lr)
 
     def define_scheduler(self, optimizer):
+        """
+        Defines the scheduler
+        :param optimizer:   optimizer
+        """
         if self.args.scheduler:
             self.scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=self.args.decay_every,
                                                              gamma=self.args.decay_rate)
@@ -149,6 +223,14 @@ class Evaluator:
 
     def run_epoch(self, protein_list, metrics=None,
                   optimizer=None, train=False):
+        """
+        Runs the epoch
+        :param protein_list:    list of proteins
+        :param metrics:     metrics
+        :param optimizer:   optimizer
+        :param train:   train or not
+        :return:    computed loss
+        """
         if train:
             self.model.train()
             self.optimizer.zero_grad()
@@ -204,8 +286,16 @@ class Evaluator:
 
     def train_epitope(self, protein_list_train, protein_list_val, protein_list_test, model_save_path=None, n_run=None):
         """
-      Evaluate epitope multitask model on test set, only outputs the final auc pr and auc roc
-      """
+        Evaluate epitope multitask model on test set, only outputs the final auc pr and auc roc
+
+          :param protein_list_train:  list of proteins for training
+          :param protein_list_val:    list of proteins for validation
+          :param protein_list_test:   list of proteins for testing
+          :param model_save_path:     path to save the model
+          :param n_run:   run number
+          :return:    metrics
+
+        """
 
         dateTimeObj = datetime.now()
         if model_save_path is None:
@@ -252,6 +342,12 @@ class Evaluator:
         return best_metrics
 
     def define_metrics(self):
+        """
+        Define metrics for epitope multitask model
+
+        :return: metrics dictionary
+
+        """
         metrics = {"ag": dict(), "ab": dict()}
         for metrics_name in self.args.metrics:
             metrics["ag"][metrics_name] = metrics_dict[metrics_name](task="binary").set_dtype(
@@ -264,6 +360,12 @@ class Evaluator:
     def test_epitope(self, protein_list_test, thresholds=None):
         """
         Evaluate epitope multitask model on test set, only outputs the final auc pr and auc roc
+
+        :param protein_list_test: list of proteins to evaluate
+        :param thresholds: thresholds for curves
+        :return: metrics dictionary
+
+
         """
         metrics = self.define_metrics()
         curves_dict = {"ROC": ROC, "PrecRecall": PrecisionRecallCurve}
@@ -298,16 +400,23 @@ class Evaluator:
         return test_metrics, df, curves
 
 
-from models.epitope_model_egnn import EpiEPMP as egnnEPMP
+from IGEP.models.epitope_model_egnn import EpiEPMP as egnnEPMP
 
 
 class EGNNEvaluator(Evaluator):
+    """
+    Evaluator for epitope model with EGNNS
+    """
     def __init__(self, args, num_cdr_feats, num_ag_feats, dtype=torch.float64):
+
         super().__init__(egnnEPMP(num_cdr_feats, num_ag_feats, inner_dim=args.inner_dim, use_adj=args.use_adj,
                                       update_coors=args.update_coors, dropout=args.dropout, num_egnn=args.num_egnns),
                              args, dtype)
 
     def define_optimizer(self):
+        """
+        Define optimizer for epitope model with EGNNS
+        """
         ignored_params = list(map(id, [self.model.agfc.weight, self.model.agfc.bias]))
         base_params = filter(lambda p: id(p) not in ignored_params, self.model.parameters())
         ignored_params = filter(lambda p: id(p) in ignored_params, self.model.parameters())
@@ -327,13 +436,15 @@ class EGNNEvaluator(Evaluator):
         preds_ab, preds_ag = self.model(cdrs.float(), ags.float(), edge_index_ab, edge_index_ag, edge_index_d,
                                         coords_ab,
                                         coords_ag)
-
         return preds_ab, preds_ag
 
-from models.epitope_model import EpiEPMP
+from IGEP.models.epitope_model import EpiEPMP
 
 
 class EPMPEvaluator(Evaluator):
+    """
+    Evaluator for the EPMPEpitopeModel
+    """
     def __init__(self, args, num_cdr_feats, num_ag_feats, dtype=torch.float64):
         super().__init__(EpiEPMP(num_cdr_feats, num_ag_feats, inner_dim=args.inner_dim), args, dtype)
 
@@ -346,6 +457,7 @@ class EPMPEvaluator(Evaluator):
             {'params': base_params}, {'params': ignored_params, 'lr': 0.00001}], lr=0.001)
 
     def run_model(self, protein):
+
         cdrs, ags, edge_index_ab, edge_index_ag = (
             protein["cdrs"].to(self.device), protein["ags"].to(self.device),
             protein["edge_index_cdr"].to(self.device), protein["edge_index_ag"].to(self.device),
