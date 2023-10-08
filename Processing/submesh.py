@@ -21,6 +21,10 @@ def save_pickle(file_name, vals):
 
 
 def load_pickle(file_path):
+    """
+    :param file_path:
+    :return:
+    """
     if os.path.exists(file_path) and os.path.isfile(file_path):
         with open(file_path, "rb") as f:
             data = pickle.load(f)

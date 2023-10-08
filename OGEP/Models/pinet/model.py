@@ -10,7 +10,11 @@ from torch.autograd import Variable
 
 
 class STN3d(nn.Module):
+    """     Spatial Transformer Network for 3D point clouds"""
     def __init__(self):
+        """     Initialize STN3d
+        """
+
         super(STN3d, self).__init__()
         self.conv1 = torch.nn.Conv1d(3, 64, 1)
         self.conv2 = torch.nn.Conv1d(64, 128, 1)
@@ -27,6 +31,11 @@ class STN3d(nn.Module):
         self.bn5 = nn.BatchNorm1d(256)
 
     def forward(self, x):
+        """     Forward pass
+        :param x:   Input
+        :return:    Output
+        """
+
         batchsize = x.size()[0]
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
@@ -49,6 +58,7 @@ class STN3d(nn.Module):
 
 
 class STNkd(nn.Module):
+    """     Spatial Transformer Network for k-dimensional point clouds"""
     def __init__(self, k=64):
         super(STNkd, self).__init__()
         self.conv1 = torch.nn.Conv1d(k, 64, 1)
@@ -68,6 +78,12 @@ class STNkd(nn.Module):
         self.k = k
 
     def forward(self, x):
+        """     Forward pass
+
+        :param x:   Input
+        :return:    Output
+        """
+
         batchsize = x.size()[0]
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
@@ -90,7 +106,16 @@ class STNkd(nn.Module):
 
 # geo and physical chemical
 class PointNetfeat4(nn.Module):
+    """     PointNet feature extractor for 4D point clouds
+    """
+
     def __init__(self, d=5, global_feat=True, feature_transform=False):
+        """     Initialize PointNetfeat4
+        :param d:                   Number of dimensions
+        :param global_feat:         Global feature
+        :param feature_transform:   Feature transform
+        """
+
         super(PointNetfeat4, self).__init__()
         self.stn = STNkd(k=d)
         self.conv1 = torch.nn.Conv1d(d, 64, 1)
@@ -105,6 +130,11 @@ class PointNetfeat4(nn.Module):
             self.fstn = STNkd(k=64)
 
     def forward(self, x):
+        """     Forward pass
+        :param x:   Input
+        :return:    Output
+        """
+
         n_pts = x.size()[2]
         trans = self.stn(x)
         x = x.transpose(2, 1)
@@ -135,7 +165,16 @@ class PointNetfeat4(nn.Module):
 
 # geometry only
 class PointNetfeat4geo(nn.Module):
+    """     PointNet feature extractor for 4D point clouds
+    """
+
     def __init__(self, d=5, global_feat=True, feature_transform=False):
+        """     Initialize PointNetfeat4
+        :param d:                   Number of dimensions
+        :param global_feat:         Global feature
+        :param feature_transform:   Feature transform
+        """
+
         super(PointNetfeat4geo, self).__init__()
         self.stn = STN3d()
         self.conv1 = torch.nn.Conv1d(d, 64, 1)
@@ -150,6 +189,11 @@ class PointNetfeat4geo(nn.Module):
             self.fstn = STNkd(k=64)
 
     def forward(self, x):
+        """     Forward pass
+        :param x:   Input
+        :return:    Output
+        """
+
         n_pts = x.size()[2]
         geox = x[:, 0:3, :]
         fx = x[:, 3:, :]
@@ -183,7 +227,15 @@ class PointNetfeat4geo(nn.Module):
 
 # general use one
 class PointNetDenseCls12(nn.Module):
+    """     PointNet feature extractor for 4D point clouds
+    """
+
     def __init__(self, k=2, feature_transform=False, pdrop=0.0, id=5):
+        """     Initialize PointNetfeat4
+        :param k:                   Number of classes
+        :param feature_transform:   Feature transform
+        """
+
         super(PointNetDenseCls12, self).__init__()
         self.k = k
         self.feature_transform = feature_transform
@@ -202,6 +254,11 @@ class PointNetDenseCls12(nn.Module):
         self.dropout = nn.Dropout(p=pdrop)
 
     def forward(self, x1, x2):
+        """     Forward pass
+        :param x:   Input
+        :return:    Output
+        """
+
         batchsize = x1.size()[0]
         n_pts = x1.size()[2]
         x1gf, x1pf, trans1, trans_feat1 = self.feat(x1)
@@ -236,7 +293,15 @@ class PointNetDenseCls12(nn.Module):
 
 # geo only
 class PointNetDenseCls12geo(nn.Module):
+    """     PointNet feature extractor for 4D point clouds
+    """
+
     def __init__(self, k=2, feature_transform=False, pdrop=0.0, id=5):
+        """     Initialize PointNetfeat4
+        :param k:                   Number of classes
+        :param feature_transform:   Feature transform
+        """
+
         super(PointNetDenseCls12geo, self).__init__()
         self.k = k
         self.feature_transform = feature_transform
@@ -255,6 +320,11 @@ class PointNetDenseCls12geo(nn.Module):
         self.dropout = nn.Dropout(p=pdrop)
 
     def forward(self, x1, x2):
+        """     Forward pass
+        :param x:   Input
+        :return:    Output
+        """
+
         batchsize = x1.size()[0]
         n_pts = x1.size()[2]
         x1gf, x1pf, trans1, trans_feat1 = self.feat(x1)
@@ -283,6 +353,10 @@ class PointNetDenseCls12geo(nn.Module):
 
 
 def feature_transform_regularizer(trans):
+    """     Feature transform regularizer
+
+    """
+
     d = trans.size()[1]
     batchsize = trans.size()[0]
     I = torch.eye(d)[None, :, :]

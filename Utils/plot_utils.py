@@ -5,8 +5,13 @@ from plotly.subplots import make_subplots
 
 
 def plot_rl(pc_r, seg_r, pc_l, seg_l, show=True):
-    """
-    Plot receptor and ligand as point clouds with Plotly
+    """ Plot receptor and ligand as point clouds with Plotly
+    :param pc_r: receptor point cloud [n_verts, 3]
+    :param seg_r: segmentation of receptor point cloud [n_verts, 1]
+    :param pc_l: ligand point cloud [n_verts, 3]
+    :param seg_l: segmentation of ligand point cloud [n_verts, 1]
+    :param show: show plot
+    :return: None
     """
 
     fig = make_subplots(
@@ -55,6 +60,13 @@ def plot_rl(pc_r, seg_r, pc_l, seg_l, show=True):
 def plot_rl_colors(pc_r, col_r, pc_l, col_l, show=True):
     """
     Plot receptor and ligand as point clouds with Plotly
+
+    :param pc_r:    receptor point cloud
+    :param col_r:   receptor colors
+    :param pc_l:    ligand point cloud
+    :param col_l:   ligand colors
+    :param show:    show plot
+    :return:        plotly figure
     """
 
     fig = make_subplots(
@@ -82,13 +94,13 @@ def plot_rl_colors(pc_r, col_r, pc_l, col_l, show=True):
 
 
 def plot_mesh(v, f, params, show=True):
-    """
+    """  Plot a mesh with Plotly
     https://plotly.github.io/plotly.py-docs/generated/plotly.graph_objects.Mesh3d.html
-    @param v:
-    @param f:
-    @param params:
-    @param show:
-    @return:
+    :param v:  vertices
+    :param f:   faces
+    :param params:  parameters for the plotly mesh
+    :param show:    show plot
+    :return:    plotly figure
     """
     fig = go.Figure(data=[go.Mesh3d(x=v[:, 0], y=v[:, 1], z=v[:, 2], i=f[:, 0], j=f[:, 1], k=f[:, 2],
                                     contour_width=2, contour_color="#101010", contour_show=True,
@@ -103,11 +115,11 @@ def plot_mesh(v, f, params, show=True):
 
 
 def plot_pointcloud(coords, color=None, show=True):
-    """
+    """ Plot a point cloud with Plotly
 
-    @param coords: numpy ndarray with 3d coordinates, size: [n,3]
-    @param color: array of values to plot as color. When None, is derived from the coordinates. Size: [n]. Default: None
-    @return:
+    :param coords: numpy ndarray with 3d coordinates, size: [n,3]
+    :param color: array of values to plot as color. When None, is derived from the coordinates. Size: [n]. Default: None
+    :return: plotly figure
 
     """
     if color is None:
@@ -142,9 +154,18 @@ def plot_pointcloud(coords, color=None, show=True):
 
 
 def plot_colors(pc_r, col_r, pc_l, col_l, subplots_titles, show=True, colorscale='Plasma'):
+    """  Plot receptor and ligand as point clouds with Plotly
+
+    :param pc_r:    receptor point cloud
+    :param col_r:   receptor colors
+    :param pc_l:    ligand point cloud
+    :param col_l:   ligand colors
+    :param subplots_titles: titles for the subplots
+    :param show:    show plot
+    :param colorscale:  colorscale for the plot
+    :return:        plotly figure
     """
-    Plot receptor and ligand as point clouds with Plotly
-    """
+
     cmax = np.max(np.concatenate((col_r, col_l), axis=0))
     cmin = np.min(np.concatenate((col_r, col_l), axis=0))
     fig = make_subplots(
@@ -170,10 +191,22 @@ def plot_colors(pc_r, col_r, pc_l, col_l, subplots_titles, show=True, colorscale
 
 
 def plot_pointclouds(v, cols, subplots_titles, colorscale='Plasma', size=5, show=True):
+    """ Plot point clouds with Plotly
+
+        :param v:   list of point clouds
+        :param cols:    list of colors for each point cloud
+        :param subplots_titles: titles for the subplots
+        :param colorscale:  colorscale for the plot
+        :param size:    size of the points
+        :param show:    show plot
+        :return:        plotly figure
+        """
     fig = make_subplots(
         rows=1, cols=len(v),
         subplot_titles=subplots_titles,
         specs=[[{'type': 'scene'} for i in range(len(v))]])
+
+
 
     fig.layout.coloraxis.colorscale = colorscale
     for i in range(len(v)):
@@ -205,6 +238,17 @@ def plot_pointclouds(v, cols, subplots_titles, colorscale='Plasma', size=5, show
     return fig
 
 def plot_abag_pointclouds(v, cols, subplots_titles,  size=5, show=True, x_eye = -1.25, y_eye = 2, z_eye = 0.5):
+    """ Plot point clouds with Plotly
+
+    :param v:   list of point clouds
+    :param cols:    list of colors for each point cloud
+    :param subplots_titles: titles for the subplots
+    :param colorscale:  colorscale for the plot
+    :param size:    size of the points
+    :param show:    show plot
+    :return:        plotly figure
+    """
+
     fig = make_subplots(
         rows=1, cols=len(v),
         subplot_titles=subplots_titles,
@@ -254,6 +298,18 @@ def plot_abag_pointclouds(v, cols, subplots_titles,  size=5, show=True, x_eye = 
     return fig
 
 def plot_3dgraphs(v, edges, cols, subplots_titles, colorscale='Plasma', size=5, show=True):
+    """ Plot 3D graphs with Plotly
+
+    :param v:   list of graphs
+    :param edges:   list of edges
+    :param cols:    list of colors for each graph
+    :param subplots_titles: titles for the subplots
+    :param colorscale:  colorscale for the plot
+    :param size:    size of the points
+    :param show:    show plot
+    :return:        plotly figure
+    """
+
     fig = make_subplots(
         rows=1, cols=len(v),
         subplot_titles=subplots_titles,
@@ -300,6 +356,22 @@ def plot_3dgraphs(v, edges, cols, subplots_titles, colorscale='Plasma', size=5, 
 
 def plot_abag_3dgraphs(v, edges, cols, subplots_titles, size=5, show=True, x_eye = -1.25, y_eye = 2, z_eye = 0.5,
                        cmax=1, cmin=-0.4):
+    """     Plot 3D graphs with Plotly
+
+    :param v:   list of graphs
+    :param edges:   list of edges
+    :param cols:    list of colors for each graph
+    :param subplots_titles:     titles for the subplots
+    :param size:    size of the points
+    :param show:    show plot
+    :param x_eye:   x position of the camera
+    :param y_eye:   y position of the camera
+    :param z_eye:   z position of the camera
+    :param cmax:    max value for the colorbar
+    :param cmin:    min value for the colorbar
+    :return:
+    """
+
     fig = make_subplots(
         rows=1, cols=len(v),
         subplot_titles=subplots_titles,
@@ -370,6 +442,21 @@ def plot_abag_3dgraphs(v, edges, cols, subplots_titles, size=5, show=True, x_eye
 
 def plot_meshes_over_pc(v, f, v_pc, cols, cols_pc, subplots_titles, colorscale='Plasma', size=5, opacity=0.2,
                         show=True):
+    """     Plot 3D graphs with Plotly
+
+    :param v:   list of graphs
+    :param f:   list of faces
+    :param v_pc:    list of point clouds
+    :param cols:    list of colors for each graph
+    :param cols_pc: list of colors for each point cloud
+    :param subplots_titles:     titles for the subplots
+    :param colorscale:  colorscale for the meshes
+    :param size:    size of the points
+    :param opacity: opacity of the meshes
+    :param show:    show plot
+    :return:    fig
+    """
+
     fig = make_subplots(
         rows=1, cols=len(v),
         subplot_titles=subplots_titles,
@@ -414,6 +501,21 @@ def plot_meshes_over_pc(v, f, v_pc, cols, cols_pc, subplots_titles, colorscale='
 
 def plot_abag_meshes_over_pc(v, f, v_pc, cols, cols_pc, subplots_titles, colorscale='Plasma', size=5, opacity=0.2,
                         show=True, x_eye = -1.25, y_eye = 2, z_eye = 0.5, cmax=1, cmin=-0.4):
+    """     Plot 3D graphs with Plotly
+
+    :param v:   list of graphs
+    :param f:   list of faces
+    :param v_pc:    list of point clouds
+    :param cols:    list of colors for each graph
+    :param cols_pc: list of colors for each point cloud
+    :param subplots_titles:     titles for the subplots
+    :param colorscale:  colorscale for the meshes
+    :param size:    size of the points
+    :param opacity: opacity of the meshes
+    :param show:    show plot
+    :return:    fig
+    """
+
     fig = make_subplots(
         rows=1, cols=len(v),
         subplot_titles=subplots_titles,
@@ -480,6 +582,17 @@ def plot_abag_meshes_over_pc(v, f, v_pc, cols, cols_pc, subplots_titles, colorsc
     return fig
 
 def plot_meshes(v, f, cols, subplots_titles, colorscale='Plasma', show=True):
+    """     Plot 3D graphs with Plotly
+
+    :param v:   list of graphs
+    :param f:   list of faces
+    :param cols:    list of colors for each graph
+    :param subplots_titles:     titles for the subplots
+    :param colorscale:  colorscale for the meshes
+    :param show:    show plot
+    :return:    fig
+    """
+
     fig = make_subplots(
         rows=1, cols=len(v),
         subplot_titles=subplots_titles,
@@ -515,6 +628,16 @@ def plot_meshes(v, f, cols, subplots_titles, colorscale='Plasma', show=True):
     return fig
 
 def plot_abag_meshes(v, f, cols, subplots_titles, show=True, x_eye = -1.25, y_eye = 2, z_eye = 0.5):
+    """     Plot 3D graphs with Plotly
+
+    :param v:   list of graphs
+    :param f:   list of faces
+    :param cols:    list of colors for each graph
+    :param subplots_titles:     titles for the subplots
+    :param show:    show plot
+    :return:    fig
+    """
+
     fig = make_subplots(
         rows=1, cols=len(v),
         subplot_titles=subplots_titles,
@@ -567,44 +690,3 @@ def plot_abag_meshes(v, f, cols, subplots_titles, show=True, x_eye = -1.25, y_ey
         fig.show()
     return fig
 
-
-if __name__ == "__main__":
-    import pickle
-    from pathlib import Path
-    import os
-
-    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
-    import sys
-
-    sys.path.append('../')
-    from EpiEPMP.preprocessing.epi_preprocess import *
-    dir = Path(os.getcwd())
-    # Val data
-    print("Process Proteins... ", end='')
-    dir = Path(os.getcwd()).parents[0]
-    print(dir)
-    file = str(dir) + '/Processing/data_epipred/data_train/processed-dataset.p'
-    with open(file, 'rb') as f:
-        unpickled_train = pickle.load(f)
-    # Val data
-
-    cdrs_train = unpickled_train["feature_cdr"]
-    cdrs_train = change_features(cdrs_train)
-    lbls_train = unpickled_train["lbls_cdr"]
-    edges_cdr_list_train = unpickled_train["edges_cdr"]
-    coords_cdr_train = unpickled_train["coords_cdr"]
-    coords_cdr_centers_train = unpickled_train["centers_cdr"]
-
-    ags_train = unpickled_train["features_ag"]
-    ags_train = change_features(ags_train)
-    ag_lengths_train = unpickled_train["lengths_ag"]
-    ag_lengths_train = torch.tensor(ag_lengths_train)
-    ag_lbls_train = unpickled_train["lbls_ag"]
-    edges_ag_list_train = unpickled_train["edges_ag"]
-    coords_ag_train = unpickled_train["coords_ag"]
-    coords_ag_centers_train = unpickled_train["centers_ag"]
-    i_pdb=0
-    lbls_cdr = np.array(lbls_train[i_pdb])+1
-    lbls_ag = np.array(ag_lbls_train[i_pdb])+1
-    print(lbls_ag)
-    plot_rl(coords_cdr_train[i_pdb], lbls_cdr, coords_ag_train[i_pdb], lbls_ag, show=False)

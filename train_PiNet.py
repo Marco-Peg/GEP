@@ -16,11 +16,20 @@ from Utils.train_utils import run_epoch, collate_None
 
 
 def run_PiNet(model, data):
+    """ Run PiNet on a given data
+
+    :param model:   PiNet model
+    :param data:    data dictionary containing the antibody and antigene features
+    :return: bindng affinity prediction
+    """
     preds = model(data["ab_feats"].transpose(2, 1), data["ag_feats"].transpose(2, 1))[0].cpu()  # .transpose(1,2)
     return preds
 
 
 def parse_params():
+    """     Parse the parameters of the training
+    :return: args, params
+    """
     parser = argparse.ArgumentParser(description='Train PiNet on AbAg prediction.')
     parser.add_argument('-p', '--params-files', dest='params_file', default='Param_runs/PiNet_PC.json',
                         type=str, help='json file containing the params of the training')
@@ -37,6 +46,10 @@ def parse_params():
 
 
 def fix_seed(seed):
+    """ Fix the seed for reproducibility
+
+    :param seed: seed
+    """
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -102,6 +115,7 @@ if __name__ == "__main__":
     # === Optimize
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=params["decay_every"], gamma=params["decay_rate"])
+
     # === wandb log
     print("Number of Input features", feat_dim)
     model_stats = summary(model)

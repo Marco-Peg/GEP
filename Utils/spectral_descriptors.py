@@ -6,6 +6,14 @@ import scipy.sparse as sp
 
 
 def Laplacian_eigen_decompostion(verts, faces=None, n_eigen=42):
+    """
+    Compute the eigen decomposition of the Laplacian matrix
+
+    :param verts:   vertices
+    :param faces:   faces
+    :param n_eigen: number of eigenvalues to compute
+    :return:      eigenvalues, eigenvectors
+    """
     eps = 1e-8
     if faces is not None:
         # L = -igl.cotmatrix(verts, faces)
@@ -29,6 +37,14 @@ def Laplacian_eigen_decompostion(verts, faces=None, n_eigen=42):
 
 
 def GPS(verts, faces=None, n_eigen=42):
+    """
+    Compute the Global Point Signature descriptor
+
+    :param verts:   vertices
+    :param faces:   faces
+    :param n_eigen:     number of eigenvalues to compute
+    :return:    GPS descriptor
+    """
     evals, evecs = Laplacian_eigen_decompostion(verts, faces, n_eigen)
     gps = - evecs / np.sqrt(evals).T
 
@@ -36,7 +52,14 @@ def GPS(verts, faces=None, n_eigen=42):
 
 
 def HKS(verts, faces=None, n_eigen=42, hks_size=100):
-    # Number of vertices
+    """ Compute the Heat Kernel Signature descriptor
+    :param verts:   vertices
+    :param faces:   faces
+    :param n_eigen:     number of eigenvalues to compute
+    :param hks_size:    number of samples
+    :return:
+    """
+
     n = verts.shape[0]
     hks = np.zeros((n, hks_size))
     evals, evecs = Laplacian_eigen_decompostion(verts, faces, n_eigen)
@@ -48,19 +71,28 @@ def HKS(verts, faces=None, n_eigen=42, hks_size=100):
 
     for i in np.arange(0, hks_size):
         # Computing hks
-        # print(t[i])
+
         hks[:, i] = np.sum(np.exp(-(evals.T * t[i])) * (evecs) ** 2, axis=1)
 
     return hks
 
 
 def WKS(verts, faces=None, n_eigen=42, wks_size=100, variance=7):
+    """ Compute the Wave Kernel Signature descriptor
+
+    :param verts:   vertices
+    :param faces:   faces
+    :param n_eigen:     number of eigenvalues to compute
+    :param wks_size:    number of samples
+    :param variance:    variance
+    :return:    WKS descriptor
+    """
+
     # Number of vertices
     n = verts.shape[0]
     WKS = np.zeros((n, wks_size))
     evals, evecs = Laplacian_eigen_decompostion(verts, faces, n_eigen)
 
-    # log(E)
     log_E = np.log(evals).T
     # Define the energies step
     e = np.linspace(log_E[1], np.max(log_E) / 1.02, wks_size)

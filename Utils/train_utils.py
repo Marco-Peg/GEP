@@ -10,7 +10,11 @@ class NaNError(Exception):
 
 # handle exception: None items
 def collate_None(batch):
-    # check if empty or None
+
+    """ Remove None or empty items from batch
+    :param batch:   batch to collate
+    :return:    collated batch
+    """
     out_indeces = []
     for i_b in range(len(batch) - 1, -1, -1):
         if batch[i_b] is None:
@@ -22,14 +26,23 @@ def collate_None(batch):
         return None
     return torch.utils.data.default_collate(batch)
 
-
-# def collate_faces(batch):
-#
-#     return {key: collate([d[key] for d in batch], collate_fn_map=collate_fn_map) for key in elem}
-
-
 def run_epoch(model, data_loader, losses_weights, metrics=None, device="cpu",
               optimizer=None, run_model=None, train=False, sub_batch=1, logger=None):
+
+    """     Run one epoch
+    :param model:   model to train
+    :param data_loader:     data loader
+    :param losses_weights:  weights of the losses
+    :param metrics:     metrics to compute
+    :param device:  device to use
+    :param optimizer:   optimizer to use
+    :param run_model:   function to run the model
+    :param train:       train or eval mode
+    :param sub_batch:   sub batch size
+    :param logger:    logger
+    :return:    losses, metrics
+    """
+
     if train:
         model.train()
         optimizer.zero_grad()
@@ -40,6 +53,7 @@ def run_epoch(model, data_loader, losses_weights, metrics=None, device="cpu",
     loss_total = {"total": 0.0}
     for loss in losses_weights:
         loss_total[loss] = 0
+
     # if metrics is not None:
     #     metrics_val = {"ag":dict(),"cdr":dict()}
     #     for metric in metrics:
@@ -124,6 +138,21 @@ curves_dict = {"ROC": ROC, "PrecRecall": PrecisionRecallCurve}
 def test_model(model, data_loader, metrics_dict=metrics_dict, curves_dict=curves_dict, thresholds=None, threshold=0.5,
                device="cpu", reduce_res='mean',
                run_model=None, dtype=torch.float64):
+    """     Run one epoch
+    :param model:   model to train
+    :param data_loader:     data loader
+    :param losses_weights:  weights of the losses
+    :param metrics:     metrics to compute
+    :param device:  device to use
+    :param optimizer:   optimizer to use
+    :param run_model:   function to run the model
+    :param train:       train or eval mode
+    :param sub_batch:   sub batch size
+    :param logger:    logger
+    :return:    losses, metrics
+    """
+
+
     model.eval()
     # for metric in metrics_dict:
 

@@ -26,6 +26,12 @@ class LearnedTimeDiffusion(nn.Module):
     """
 
     def __init__(self, C_inout, method='spectral'):
+        """
+        Args:
+          - C_inout: number of channels
+          - method: one of ['spectral', 'implicit_dense']
+        """
+
         super(LearnedTimeDiffusion, self).__init__()
         self.C_inout = C_inout
         self.diffusion_time = nn.Parameter(torch.Tensor(C_inout))  # (C)
@@ -34,6 +40,17 @@ class LearnedTimeDiffusion(nn.Module):
         nn.init.constant_(self.diffusion_time, 0.0)
 
     def forward(self, x, L, mass, evals, evecs):
+        """
+
+        Args:
+            - x: (B,V,C) input values
+            - L: (V,V) sparse laplacian
+            - mass: (V) mass matrix diagonal
+            - evals: (K) eigenvalues
+            - evecs: (V,K) eigenvectors
+        Returns:
+            - (B,V,C) diffused values
+        """
 
         # project times to the positive halfspace
         # (and away from 0 in the incredibly rare chance that they get stuck)

@@ -15,7 +15,13 @@ from scipy import spatial
 
 
 class NeighbourSearch(object):
+    """
+    Class NeighbourSearch is used to determine ground truth and neighbourhoods for antibody amino acids
+    """
     def __init__(self, ag_atoms_list):
+        """ Initialize the NeighbourSearch class
+        :param ag_atoms_list:   list of atoms in the antigen
+        """
         self.ag_atoms = ag_atoms_list
         self.x_coord_list = []
         self.y_coord_list = []
@@ -36,5 +42,11 @@ class NeighbourSearch(object):
         return len(self.tree.query_ball_point(atom.get_coord(), distance))
 
     def get_distance_neighbourgh(self,atom):
+        """
+        Returns the distance to the closest atom in the antigen
+
+        :param atom:    atom in the antibody
+        :return:    distance to the closest atom in the antigen
+        """
         distances=self.tree.query(atom.get_coord(), k=1)[0]
         return distances

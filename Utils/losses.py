@@ -8,16 +8,34 @@ metrics_dict = {"MCC": MatthewsCorrCoef, "auroc": AUROC, "accuracy": Accuracy, "
                 "recall": Recall, }
 
 class BCE(Metric):
+    """
+    Binary Cross Entropy
+
+    Args:
+        preds: Predictions from the model
+        target: Ground truth labels
+
+    Returns:
+        BCE loss
+    """
     is_differentiable = True
     higher_is_better = False
     full_state_update = True
 
     def __init__(self, **kwargs):
+        """     Initialize BCE loss
+        """
         super().__init__()
         self.add_state("loss", default=torch.tensor(.0, requires_grad=True), dist_reduce_fx="sum")
         self.add_state("total", default=torch.tensor(0), dist_reduce_fx="sum")
 
     def update(self, preds: torch.Tensor, target: torch.Tensor):
+        """     Update BCE loss
+        :param preds:   Predictions from the model
+        :param target:  Ground truth labels
+        :return:        BCE loss
+        """
+
         self.loss += F.binary_cross_entropy_with_logits(preds, target, pos_weight=torch.FloatTensor(
             [(target.size(1) - float(target.cpu().sum()))
              / float(target.cpu().sum())]).to(target.device))
@@ -32,6 +50,11 @@ class BCE(Metric):
 
 
 def gk(x):
+    """
+    Gaussian Kernel
+    :param x:   Input
+    :return:    Gaussian Kernel
+    """
     cen = torch.nn.Parameter(torch.tensor([0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95]).float(),
                              requires_grad=False).to(x.device)
 
@@ -43,7 +66,7 @@ def gk(x):
 
 
 def hist_loss(br, bl, verts_r, verts_l, max_subsample=5000, empty_penalty=1e3, lloss=1):
-    """
+    """    Histogram Loss
     distance distributions (represented by histograms) of subsets of random points in the positive labeled point clouds
     Act as regulizer to enforce complementary shapes
 
@@ -54,6 +77,7 @@ def hist_loss(br, bl, verts_r, verts_l, max_subsample=5000, empty_penalty=1e3, l
     :param max_subsample: maximum vertices to consider
     :return: loss as scalar
     """
+
     br = (torch.gt(br, 0.5) == 1).nonzero()
     br = torch.squeeze(br, -1)
     bl = (torch.gt(bl, 0.5) == 1).nonzero()
@@ -87,29 +111,56 @@ def hist_loss(br, bl, verts_r, verts_l, max_subsample=5000, empty_penalty=1e3, l
 
 
 class HistLoss(Metric):
+    """ Histogram Loss
+    distance distributions (represented by histograms) of subsets of random points in the positive labeled point clouds
+    Act as regulizer to enforce complementary shapes
+    """
     is_differentiable = True
     higher_is_better = False
     full_state_update = True
 
     def __init__(self, weight=1.0, **kwargs):
+        """    Initialize BCE loss
+        """
+
         super().__init__()
         self.add_state("loss", default=torch.tensor(.0, requires_grad=True), dist_reduce_fx="sum", )
         self.add_state("total", default=torch.tensor(0), dist_reduce_fx="sum")
         self.weight = weight
 
     def update(self, choice1, choice2, verts1, verts2):
+        """     Update Histogram loss
+        :param choice1:
+        :param choice2:
+        :param verts1:
+        :param verts2:
+        :return:            Histogram loss
+        """
+
         self.loss += hist_loss(choice1.view(-1, 1), choice2.view(-1, 1),
                                verts1.view(-1, 3), verts2.view(-1, 3), empty_penalty=1e2)
         self.total += choice1.size(0)
 
     def compute(self):
+        """     Compute Histogram loss
+        :return:    Histogram loss
+        """
         return self.weight * self.loss / self.total
 
     def reset(self) -> None:
+        """ Reset loss
+        """
         super().reset()
         self.loss.requires_grad = True
 
 def compute_BCE(pred, target):
+    """
+    Compute Binary Cross Entropy Loss
+
+    :param pred:  prediction
+    :param target:  target
+    :return:      loss
+    """
     loss = F.binary_cross_entropy_with_logits(pred, target, pos_weight=torch.FloatTensor(
         [((target.size(1) * target.size(0)) - float(target.cpu().sum()))
          / float(target.cpu().sum())]).to(target.device))
@@ -117,6 +168,14 @@ def compute_BCE(pred, target):
     return loss
 
 def compute_losses(losses, data, pred):
+    """
+    Compute losses
+
+    :param losses:  list of losses to compute
+    :param data:    data dict
+    :param pred:    prediction dict
+    :return:
+    """
     losses_vals = dict()
     if "BCE" in losses:
         preds = torch.cat((pred["ab"], pred["ag"]), 1)
@@ -139,31 +198,23 @@ def compute_losses(losses, data, pred):
 
 
 def update_metrics(metrics, target, choice):
-    # metrics = dict()
-    # target = torch.cat((data["ab_labels"], data["ag_labels"]), -1).unsqueeze(-1)
-    # preds = torch.cat((pred["ab"], pred["ag"]), 1)
-
+    """     Update metrics
+    :param metrics:    Dictionary of metrics
+    :param target:     Target labels
+    :param choice:
+    :return:      Updated metrics
+    """
     for metric in metrics:
         metrics[metric].update(choice, target.to(torch.int64))
-
-    # loss_select = list(metrics.keys())
-    # for x in ["accuracy", "precision", "recall", "ROC", "PrecRecall"]:
-    #     if x in loss_select:
-    #         metrics[x].update(choice, target.to(torch.int64))
-    # # if "accuracy" in loss_select:
-    # #     metrics["accuracy"].update(preds,target)
-    # #     # metrics["accuracy"] = preds.eq(target).cpu().sum() / float(target.size(1))
-    # # if "prec_recall" in loss_select:
-    # #     metrics["precision"], metrics["recall"] =
-    # #     metrics["precision"],metrics["recall"] = precision_recall(pred_choice.view(-1, 1), target.view(-1, 1))
-    # if "auroc" in loss_select:
-    #     metrics["auroc"].update(choice.view(-1), target.to(torch.int64).view(-1))
-    #     # fpr, tpr, thresholds = roc(target.view(-1, 1), torch.sigmoid(preds).cpu().view(-1, 1), pos_label=1)
-    # metrics["auc-roc"] = auc(fpr, tpr)
     return metrics
 
 
 def compute_metrics(metrics):
+    """    Compute metrics
+    :param metrics:     Dictionary of metrics
+    :return:        Computed metrics
+    """
+
     computed_loss = dict()
     for metric in metrics:
         computed_loss[metric] = metrics[metric].compute()
@@ -171,5 +222,10 @@ def compute_metrics(metrics):
 
 
 def reset_metrics(metrics):
+    """    Reset metrics
+    :param metrics:     Dictionary of metrics
+    :return:        Reset metrics
+    """
+
     for metric in metrics:
         metrics[metric].reset()

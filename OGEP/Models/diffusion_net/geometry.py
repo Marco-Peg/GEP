@@ -11,7 +11,7 @@ import sklearn.neighbors
 import torch
 from tqdm import tqdm
 
-import Models.diffusion_net.utils as utils
+import OGEP.Models.diffusion_net.utils as utils
 from .utils import toNP
 
 

@@ -13,6 +13,12 @@ from OGEP.Models.diffusion_net.utils import random_rotate_points
 
 
 def to_device(tensors, device=torch.device('cuda:0')):
+    """ Move tensors to the specified device
+
+    :param tensors: tensors to move
+    :return: moved tensors
+    """
+
     if isinstance(tensors, collections.abc.Mapping):
         for key in tensors:
             tensors[key] = tensors[key].to(device)
@@ -23,6 +29,9 @@ def to_device(tensors, device=torch.device('cuda:0')):
 
 
 class ShapeNetDataset3(data.Dataset):
+    """ ShapeNet dataset for point cloud classification and segmentation
+    """
+
     def __init__(self,
                  root,
                  npoints=6000,
@@ -34,7 +43,20 @@ class ShapeNetDataset3(data.Dataset):
                  k_eig=128,
                  rs=0,
                  precompute_data=False):
+        """ ShapeNet dataset for point cloud classification and segmentation
 
+        :param root:    root directory of the dataset
+        :param npoints:         number of points to sample from the point cloud
+        :param classification:  if True, return the class label
+        :param class_choice:    specify the class to load
+        :param split:        split of the dataset, one of ['train', 'test', 'validation']
+        :param data_augmentation:   if True, apply random rotation to the point cloud
+        :param need_operators:  if True, compute the operators
+        :param k_eig:        number of eigenvectors to compute
+        :param rs:         random seed
+        :param precompute_data: if True, load precomputed data
+
+        """
         self.root = root
         self.npoints = npoints
         self.catfile = os.path.join(self.root, 'synsetoffset2category.txt')
@@ -91,7 +113,9 @@ class ShapeNetDataset3(data.Dataset):
             self.precompute()
 
     def precompute(self, use_cache=True):
-
+        """ Precompute the data and operators
+        :param use_cache:   if True, load precomputed data from cache
+        """
         self.op_cache_dir = os.path.join(self.root, "op_cache") if use_cache else None
         self.verts_list = [None] * len(self.datapath)
         self.feats_list = [None] * len(self.datapath)
@@ -114,6 +138,10 @@ class ShapeNetDataset3(data.Dataset):
         self.precomputed = True
 
     def get_standard_item(self, index):
+        """         Get the item at the index in the dataset in the standard format
+        :param index:   index of the item
+        :return:
+        """
         fn = self.datapath[index]
         point_set = np.loadtxt(fn[1]).astype(np.float32)
         seg = np.loadtxt(fn[2]).astype(np.int64)
@@ -123,7 +151,6 @@ class ShapeNetDataset3(data.Dataset):
             point_set = point_set[choice, :]
             seg = seg[choice]
 
-        # noemalize flag
         cnorm = 0
 
         coordset = point_set[:, 0:3]
@@ -146,6 +173,11 @@ class ShapeNetDataset3(data.Dataset):
             return coordset, featset, seg
 
     def __getitem__(self, index):
+        """ Get the item
+        :param index:  index of the item
+        :return:
+        """
+
         if self.precomputed:
             if self.need_operators:
                 return self.verts_list[index], self.feats_list[index], self.faces_list[index], self.frames_list[index], \
@@ -176,12 +208,18 @@ class ShapeNetDataset3(data.Dataset):
 
 
 class epiapbsconDataset(ShapeNetDataset3):
+    """ EpiAPBSCon dataset
+    """
+
     def __init__(self, **kwargs):
         super().__init__(os.path.join("data", "epiapbscon"), **kwargs)
 
 
 ## data epipred ##
 class epipredDataset(data.Dataset):
+    """ EpiPred dataset
+    """
+
     def __init__(self, split="validation", as_mesh=True, npoints=0, centered=True, data_augmentation=False,
                  features=["bio"], hks_dim=16, get_faces=False,
                  need_operators=False, k_eig=128, precompute_data=False,
@@ -218,6 +256,9 @@ class epipredDataset(data.Dataset):
 
 
     def load_data(self):
+        """ Load the data
+        """
+
         # vertices
         with open(os.path.join(self.root, f"surfaces_points{'_' + str(self.npoints) if self.load_submesh else ''}.p"),
                   "rb") as f:
@@ -266,6 +307,9 @@ class epipredDataset(data.Dataset):
                                   "lbls_ag_res": res_dataset["lbls_ag"], }
 
     def precompute(self, use_cache=True):
+        """ Precompute the operators
+        """
+
         # Precompute operators
         if self.need_operators:
             self.op_cache_dir = os.path.join(self.root, "op_cache") if use_cache else None
@@ -296,6 +340,9 @@ class epipredDataset(data.Dataset):
         raise NotImplementedError("Non implemented")
 
     def get_feats(self, index, type="bio", mol="ag", choice=None, **kwargs):
+        """ Get the features
+        """
+
         if type == "bio":
             if choice is None:
                 return self.feats[mol][index]
@@ -324,6 +371,9 @@ class epipredDataset(data.Dataset):
             return compute_hks_autoscale(kwargs["evals"], kwargs["evecs"], kwargs["hks_dim"])
 
     def __getitem__(self, index):
+        """ Get the item
+        """
+
         out_data = {"ab_verts": self.verts["cdr"][index], "ag_verts": self.verts["ag"][index],
                     "ab_labels": self.labels["cdr"][index], "ag_labels": self.labels["ag"][index]}
         # cdr mask

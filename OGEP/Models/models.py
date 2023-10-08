@@ -10,10 +10,27 @@ import OGEP.Models.diffusion_net as diffNet
 
 
 class DiffNet_AbAgPredictor(nn.Module):
+    """
+    DiffNet_AbAgPredictor: PiNet model
+    """
     def __init__(self, in_dim, diffN_out, diffN_widths=(64, 128, 1024), diffN_dropout=True,
                  seg_widths=(1024, 512, 256, 180, 64), pdrop=0.3,
                  with_gradient_features=True, with_gradient_rotations=True, diffusion_method='spectral',
                  device=torch.device('cpu'), shared_diff=True):
+        """  DiffNet_AbAgPredictor: PiNet model
+        :param in_dim:                      input dimension
+        :param diffN_out:                   output dimension
+        :param diffN_widths:                width of the diffusion network
+        :param diffN_dropout:               whether to use dropout in the diffusion network
+        :param seg_widths:                  width of the segmentation network
+        :param pdrop:                       dropout probability
+        :param with_gradient_features:      whether to use gradient features
+        :param with_gradient_rotations:     whether to use gradient rotations
+        :param diffusion_method:            diffusion method
+        :param device:                      device
+        :param shared_diff:                 whether to share the diffusion network between the antibody and the antigen
+        """
+
         super(DiffNet_AbAgPredictor, self).__init__()
         # Basic parameters
         self.in_dim = in_dim
@@ -88,6 +105,14 @@ class DiffNet_AbAgPredictor(nn.Module):
         self.to(device)
 
     def define_DiffBlock(self, diffN_widths, diffN_dropout, name="block_"):
+        """  Defines a DiffusionNetBlock and adds it to the model
+
+        :param diffN_widths:        list of widths of the diffusion network
+        :param diffN_dropout:       dropout rate
+        :param name:                name of the block
+        :return:
+        """
+
         diffN_blocks = []
         diffN_lins = []
         for i_block in range(len(diffN_widths)):
@@ -112,6 +137,29 @@ class DiffNet_AbAgPredictor(nn.Module):
     def forward(self, x1, mass1, x2, mass2,
                 L1=None, evals1=None, evecs1=None, gradX1=None, gradY1=None, edges1=None, faces1=None,
                 L2=None, evals2=None, evecs2=None, gradX2=None, gradY2=None, edges2=None, faces2=None, ):
+        """    Forward path
+
+        :param x1:          input point cloud 1
+        :param mass1:       mass matrix of point cloud 1
+        :param x2:          input point cloud 2
+        :param mass2:       mass matrix of point cloud 2
+        :param L1:          laplacian of point cloud 1
+        :param evals1:      eigenvalues of point cloud 1
+        :param evecs1:      eigenvectors of point cloud 1
+        :param gradX1:      gradient in x direction of point cloud 1
+        :param gradY1:      gradient in y direction of point cloud 1
+        :param edges1:      edges of point cloud 1
+        :param faces1:      faces of point cloud 1
+        :param L2:          laplacian of point cloud 2
+        :param evals2:      eigenvalues of point cloud 2
+        :param evecs2:      eigenvectors of point cloud 2
+        :param gradX2:      gradient in x direction of point cloud 2
+        :param gradY2:      gradient in y direction of point cloud 2
+        :param edges2:      edges of point cloud 2
+        :param faces2:      faces of point cloud 2
+        :return:            output of the network
+
+        """
         if x1.shape[-1] != self.in_dim or x2.shape[-1] != self.in_dim:
             raise ValueError(
                 "DiffusionNet was constructed with C_in={}, but x_in has last dim={}".format(self.C_in, x1.shape[-1]))
@@ -183,7 +231,16 @@ class DiffNet_AbAgPredictor(nn.Module):
 
 ## PiNet ##
 class STNkd(nn.Module):
+    """  STNkd is a spatial transformer network for point clouds.
+    """
+
     def __init__(self, k=64, incr_dims=[64, 128, 1024, ], decr_dims=[512, 256]):
+        """ STNkd is a spatial transformer network for point clouds.
+
+        :param k:        input dimension
+        :param incr_dims:
+        :param decr_dims:
+        """
         super(STNkd, self).__init__()
 
         self.conv_seq = nn.Sequential()
@@ -210,6 +267,13 @@ class STNkd(nn.Module):
         self.k = k
 
     def forward(self, x):
+        """ Forward pass of the STN.
+
+        :param x:       input point cloud
+        :return:        matrix
+        """
+
+
         batchsize = x.size()[0]
         x = self.conv_seq(x)
         x = torch.max(x, 2, keepdim=True)[0]
@@ -227,8 +291,23 @@ class STNkd(nn.Module):
 
 
 class PointNetfeat4(nn.Module):
+    """
+    PointNetfeat4 is a PointNet module with 4 layers.
+    """
+
     def __init__(self, d=5, global_feat=True, feature_transform=False, geo=False,
                  dims=[64, 128, 1024], STN_incr_dims=[64, 128, 1024, ], STN_decr_dims=[512, 256]):
+        """ PointNetfeat4 is a PointNet module with 4 layers.
+
+        :param d:                   input dimension
+        :param global_feat:         global feature
+        :param feature_transform:   feature transform
+        :param geo:                 geometric
+        :param dims:                dimensions
+        :param STN_incr_dims:       STN increase dimensions
+        :param STN_decr_dims:       STN decrease dimensions
+        """
+
         super(PointNetfeat4, self).__init__()
         self.geo = geo
         if geo:
@@ -255,6 +334,12 @@ class PointNetfeat4(nn.Module):
         self.feature_transform = feature_transform
 
     def forward(self, x):
+        """ Forward pass of the PointNetfeat4.
+
+        :param x:       input point cloud
+        :return:        matrix
+
+        """
         n_pts = x.size()[2]
         if self.geo:
             geox = x[:, 0:3, :]
@@ -293,9 +378,25 @@ class PointNetfeat4(nn.Module):
 
 # modified from PointNetDenseCls12 and PointNetDenseCls12geo
 class PiNet(nn.Module):
+    """
+    PiNet is a PointNet module with 4 layers.
+    """
+
     def __init__(self, feature_transform=False, pdrop=0.0, id=5, geo=False,
                  PN_dims=[64, 128, 1024],
                  STN_incr_dims=[64, 128, 1024], STN_decr_dims=[512, 256], seg_dims=[2112, 1024, 512, 256, 128, 64]):
+        """ PiNet is a PointNet module with 4 layers.
+
+        :param feature_transform:   feature transform
+        :param pdrop:               dropout
+        :param id:                  input dimension
+        :param geo:                 geometric
+        :param PN_dims:             PointNet dimensions
+        :param STN_incr_dims:       STN increase dimensions
+        :param STN_decr_dims:       STN decrease dimensions
+        :param seg_dims:            segmentation dimensions
+        """
+
         super(PiNet, self).__init__()
         # self.k = k
         self.feature_transform = feature_transform
@@ -318,6 +419,13 @@ class PiNet(nn.Module):
         self.seg_module.add_module(f"conv_{len(seg_dims)}", torch.nn.Conv1d(seg_dims[-1], 1, 1))
 
     def forward(self, x1, x2):
+        """ Forward pass of the PiNet.
+
+        :param x1:      input point cloud 1
+        :param x2:      input point cloud 2
+        :return:        matrix
+        """
+
         batchsize = x1.size()[0]
         n_pts = x1.size()[2]
         x1gf, x1pf, trans1, trans_feat1 = self.feat(x1)
