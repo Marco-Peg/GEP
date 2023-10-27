@@ -12,7 +12,6 @@ dependencies:
   - python=3.8.*
   - pip
   - cudatoolkit=11.3
-  - pytorch
   - torchvision
   - torchaudio
   - torchmetrics
@@ -28,7 +27,7 @@ dependencies:
   # - biopython
   - networkx
   - igl
-  - pytorch::pytorch-cuda>=12.0
-  - pytorch::pytorch
-  - pytorch::torchvision
-  - huggingface::transformers
+  - pytorch-cuda>=12.0
+  - pytorch
+  - torchvision
+
