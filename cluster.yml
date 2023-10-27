@@ -1,5 +1,36 @@
- # PyTorch:
-  # - pytorch::pytorch-cuda>=12.0
-  # - pytorch::pytorch
-  # - pytorch::torchvision
-  # - huggingface::transformers
+
+ # OS: linux
+name: GEP_C
+channels:
+  - pytorch
+  - conda-forge
+  - anaconda
+  - pyg
+  - plotly
+  - schrodinger
+dependencies:
+  - python=3.8.*
+  - pip
+  - cudatoolkit=11.3
+  - pytorch
+  - torchvision
+  - torchaudio
+  - torchmetrics
+  - tqdm
+  # - plotly=5.10.0
+  - pip:
+      - robust-laplacian
+      - potpourri3d
+  - scikit-learn
+  - wandb
+  - torchinfo
+  # - pandas
+  # - biopython
+  - networkx
+  - igl
+  
+  PyTorch:
+  - pytorch::pytorch-cuda>=12.0
+  - pytorch::pytorch
+  - pytorch::torchvision
+  - huggingface::transformers
