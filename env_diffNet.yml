@@ -1,4 +1,5 @@
 # OS: linux
+name: GEP
 channels:
   - pytorch
   - conda-forge
