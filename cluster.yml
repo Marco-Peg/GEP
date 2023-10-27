@@ -28,8 +28,6 @@ dependencies:
   # - biopython
   - networkx
   - igl
-  
-  PyTorch:
   - pytorch::pytorch-cuda>=12.0
   - pytorch::pytorch
   - pytorch::torchvision
