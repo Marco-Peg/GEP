@@ -1,6 +1,7 @@
 
  # OS: linux
-name: GEP_C
+name: GEP_Cl
+
 channels:
   - pytorch
   - conda-forge
