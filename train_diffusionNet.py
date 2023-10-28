@@ -53,6 +53,11 @@ if __name__ == "__main__":
     args, params = parse_params()
     dataset_name = params["dataset_name"]
     # system things
+    print(torch.cuda.is_available())
+    print(torch.cuda.device_count())
+    print(torch.cuda.current_device())
+    print(torch.cuda.device(0))
+    print(torch.cuda.get_device_name(0))
     if torch.cuda.is_available():
         device = params["device"]
     else:
