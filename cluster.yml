@@ -1,4 +1,4 @@
-name: Mamba
+name: Mamba_2
 
 channels:
   - default
@@ -22,7 +22,7 @@ dependencies:
   - nvidia::cuda>=12.0
 
   # PyTorch:
-  - pytorch::pytorch-cuda
+  - pytorch::pytorch-cuda>=12.0
   - pytorch::pytorch
   - pytorch::torchvision
 
