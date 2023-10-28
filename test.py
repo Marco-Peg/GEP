@@ -14,8 +14,6 @@ from Utils.dataset import datasetCreator
 from Utils.losses import metrics_dict
 from Utils.train_utils import run_epoch, collate_None
 
-
-
 if __name__ == "__main__":
 
     # system things
