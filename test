@@ -1,0 +1,124 @@
+SHELL=/bin/bash
+CONDA_MKL_INTERFACE_LAYER_BACKUP=
+CONDA_EXE=/nfs/nhome/live/cdomine/GEP/yes/bin/conda
+_CE_M=
+XML_CATALOG_FILES=file:///nfs/nhome/live/cdomine/GEP/yes/envs/Mamba_2/etc/xml/catalog file:///etc/xml/catalog
+ENV=/usr/share/modules/init/profile.sh
+KRB5CCNAME=KEYRING:persistent:801150945
+PWD=/nfs/nhome/live/cdomine/GEP
+GSETTINGS_SCHEMA_DIR=/nfs/nhome/live/cdomine/GEP/yes/envs/Mamba_2/share/glib-2.0/schemas
+LOGNAME=cdomine
+XDG_SESSION_TYPE=tty
+CONDA_PREFIX=/nfs/nhome/live/cdomine/GEP/yes/envs/Mamba_2
+MODULESHOME=/usr/share/modules
+MANPATH=::/opt/puppetlabs/puppet/share/man
+GSETTINGS_SCHEMA_DIR_CONDA_BACKUP=
+MOTD_SHOWN=pam
+HOME=/nfs/nhome/live/cdomine
+LANG=C.UTF-8
+CONDA_PROMPT_MODIFIER=(Mamba_2) 
+SSH_CONNECTION=192.168.234.1 33448 192.168.234.51 22
+CUDA_VISIBLE_DEVICES=1
+MODULEPATH_modshare=/etc/environment-modules/modules:1:/ceph/apps/ubuntu-20/modulefiles:1:/usr/share/modules/versions:1:/usr/share/modules/modulefiles:1
+XDG_SESSION_CLASS=user
+TERM=xterm-256color
+_CE_CONDA=
+USER=cdomine
+CONDA_SHLVL=2
+LOADEDMODULES=
+SHLVL=1
+BASH_ENV=/usr/share/modules/init/bash
+XDG_SESSION_ID=19733
+CONDA_PYTHON_EXE=/nfs/nhome/live/cdomine/GEP/yes/bin/python
+LC_CTYPE=C.UTF-8
+XDG_RUNTIME_DIR=/run/user/801150945
+SSH_CLIENT=192.168.234.1 33448 22
+CONDA_DEFAULT_ENV=Mamba_2
+XDG_DATA_DIRS=/usr/local/share:/usr/share:/var/lib/snapd/desktop
+PATH=/nfs/nhome/live/cdomine/GEP/yes/envs/Mamba_2/bin:/nfs/nhome/live/cdomine/GEP/yes/condabin:/nfs/nhome/live/cdomine/opt/python-3.9.2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/opt/puppetlabs/bin
+MODULEPATH=/etc/environment-modules/modules:/usr/share/modules/versions:/usr/share/modules/modulefiles:/ceph/apps/ubuntu-20/modulefiles
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/801150945/bus
+SSH_TTY=/dev/pts/5
+CONDA_PREFIX_1=/nfs/nhome/live/cdomine/GEP/yes
+MODULES_CMD=/usr/lib/x86_64-linux-gnu/modulecmd.tcl
+MKL_INTERFACE_LAYER=LP64,GNU
+BASH_FUNC_switchml%%=() {  typeset swfound=1;
+ if [ "${MODULES_USE_COMPAT_VERSION:-0}" = '1' ]; then
+ typeset swname='main';
+ if [ -e /usr/lib/x86_64-linux-gnu/modulecmd.tcl ]; then
+ typeset swfound=0;
+ unset MODULES_USE_COMPAT_VERSION;
+ fi;
+ else
+ typeset swname='compatibility';
+ if [ -e /usr/lib/x86_64-linux-gnu/modulecmd-compat ]; then
+ typeset swfound=0;
+ MODULES_USE_COMPAT_VERSION=1;
+ export MODULES_USE_COMPAT_VERSION;
+ fi;
+ fi;
+ if [ $swfound -eq 0 ]; then
+ echo "Switching to Modules $swname version";
+ source /usr/share/modules/init/bash;
+ else
+ echo "Cannot switch to Modules $swname version, command not found";
+ return 1;
+ fi
+}
+BASH_FUNC_module%%=() {  _module_raw "$@" 2>&1
+}
+BASH_FUNC__module_raw%%=() {  unset _mlshdbg;
+ if [ "${MODULES_SILENT_SHELL_DEBUG:-0}" = '1' ]; then
+ case "$-" in 
+ *v*x*)
+ set +vx;
+ _mlshdbg='vx'
+ ;;
+ *v*)
+ set +v;
+ _mlshdbg='v'
+ ;;
+ *x*)
+ set +x;
+ _mlshdbg='x'
+ ;;
+ *)
+ _mlshdbg=''
+ ;;
+ esac;
+ fi;
+ unset _mlre _mlIFS;
+ if [ -n "${IFS+x}" ]; then
+ _mlIFS=$IFS;
+ fi;
+ IFS=' ';
+ for _mlv in ${MODULES_RUN_QUARANTINE:-};
+ do
+ if [ "${_mlv}" = "${_mlv##*[!A-Za-z0-9_]}" -a "${_mlv}" = "${_mlv#[0-9]}" ]; then
+ if [ -n "`eval 'echo ${'$_mlv'+x}'`" ]; then
+ _mlre="${_mlre:-}${_mlv}_modquar='`eval 'echo ${'$_mlv'}'`' ";
+ fi;
+ _mlrv="MODULES_RUNENV_${_mlv}";
+ _mlre="${_mlre:-}${_mlv}='`eval 'echo ${'$_mlrv':-}'`' ";
+ fi;
+ done;
+ if [ -n "${_mlre:-}" ]; then
+ eval `eval ${_mlre}/usr/bin/tclsh8.6 /usr/lib/x86_64-linux-gnu/modulecmd.tcl bash '"$@"'`;
+ else
+ eval `/usr/bin/tclsh8.6 /usr/lib/x86_64-linux-gnu/modulecmd.tcl bash "$@"`;
+ fi;
+ _mlstatus=$?;
+ if [ -n "${_mlIFS+x}" ]; then
+ IFS=$_mlIFS;
+ else
+ unset IFS;
+ fi;
+ unset _mlre _mlv _mlrv _mlIFS;
+ if [ -n "${_mlshdbg:-}" ]; then
+ set -$_mlshdbg;
+ fi;
+ unset _mlshdbg;
+ return $_mlstatus
+}
+_=/usr/bin/printenv
+OLDPWD=/nfs/nhome/live/cdomine
