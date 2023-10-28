@@ -38,3 +38,5 @@ if __name__ == "__main__":
     else:
         print("cuda not available, using cpu as deafult")
         device = torch.device("cpu")
+        
+    print('hello')
