@@ -1,4 +1,4 @@
-name: Cluster
+name: Cl
 
 channels:
   - default
@@ -25,7 +25,7 @@ dependencies:
   - pytorch::pytorch-cuda>=12.0
   - pytorch::pytorch
   - pytorch::torchvision
-  - huggingface::transformers
+
 
   # JAX:
   # - nvidia::cuda-nvcc>=12.0
