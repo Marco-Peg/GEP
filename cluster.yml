@@ -1,32 +1,38 @@
-
- # OS: linux
-name: GEP_Cl
+name: Cluster
 
 channels:
-  - pytorch
+  - default
   - conda-forge
-  - anaconda
-  - pyg
-  - plotly
-  - schrodinger
+
 dependencies:
-  - python=3.8.*
+  - python>=3.11
+  - ipython
+  - ipykernel
+  - pre-commit
+
+  - numpy
+  - pandas>=2.0.0
+  - pytables
+  - submitit
+
+  # NOTE: The following requires a GPU node available
+  # at the time of creating the environment.
+  # CUDA:
+  - conda-forge::cudatoolkit>=12.0
+  - nvidia::cuda>=12.0
+
+  # PyTorch:
+  - pytorch::pytorch-cuda>=12.0
+  - pytorch::pytorch
+  - pytorch::torchvision
+  - huggingface::transformers
+
+  # JAX:
+  # - nvidia::cuda-nvcc>=12.0
+  # - conda-forge::jaxlib=*=*cuda*
+  # - conda-forge::jax
+
   - pip
-  - cudatoolkit=11.3
-  - torchvision
-  - torchaudio
-  - torchmetrics
-  - tqdm
-  # - plotly=5.10.0
   - pip:
-      - robust-laplacian
-      - potpourri3d
-  - scikit-learn
-  - wandb
-  - torchinfo
-  # - pandas
-  # - biopython
-  - networkx
-  - igl
-  - pytorch-cuda>=12.0
-  - pytorch
+      - -e .
+
