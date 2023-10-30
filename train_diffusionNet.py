@@ -53,6 +53,7 @@ if __name__ == "__main__":
     args, params = parse_params()
     dataset_name = params["dataset_name"]
     # system things
+    print(torch.zeros(1).cuda())
     print(torch.cuda.is_available())
     print(torch.cuda.device_count())
     print(torch.cuda.current_device())
