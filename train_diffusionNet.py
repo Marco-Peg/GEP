@@ -65,7 +65,7 @@ if __name__ == "__main__":
         print("cuda not available, using cpu as deafult")
         device = torch.device("cpu")
     dtype = torch.float64
-    wandb.init(project=params["wandb_data"]["project"],entity=params["wandb_data"]["entity"],name=params["wandb_data"]["name"],tags=params["wandb_data"]["tags"],notes=params["wandb_data"]["notes"])
+    wandb.init(project=params["wandb_data"]["project"],entity=params["wandb_data"]["entity"],name=params["wandb_data"]["name"],tags=params["wandb_data"]["tags"],notes=params["wandb_data"]["notes"],policy=params["wandb_data"]["policy"])
     # REPRODUCIBILITY
     fix_seed(params["seed"])
     # model
