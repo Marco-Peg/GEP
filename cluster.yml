@@ -1,0 +1,38 @@
+name: Mamba_2
+
+channels:
+  - default
+  - conda-forge
+
+dependencies:
+  - python>=3.11
+  - ipython
+  - ipykernel
+  - pre-commit
+
+  - numpy
+  - pandas>=2.0.0
+  - pytables
+  - submitit
+
+  # NOTE: The following requires a GPU node available
+  # at the time of creating the environment.
+  # CUDA:
+  - conda-forge::cudatoolkit>=11.3
+  - nvidia::cuda>=12.0
+
+  # PyTorch:
+  - pytorch::pytorch-cuda>=12.0
+  - pytorch::pytorch
+  - pytorch::torchvision
+
+
+  # JAX:
+  # - nvidia::cuda-nvcc>=12.0
+  # - conda-forge::jaxlib=*=*cuda*
+  # - conda-forge::jax
+
+  - pip
+  - pip:
+      - -e .
+
