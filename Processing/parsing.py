@@ -246,12 +246,6 @@ class Model(object):
             res.child_list.append(atom)
             self.ag_chain.child_list.append(res)
 
-"""""
- get antigen_chain by:
- get field from csv - let's say X|Y;
- search in .pdb where atom && chain_id = X or hetatm && chain_id.startsWith(X)
-"""
-
 def get_pdb_structure(pdb_file_name, ab_h_chain, ab_l_chain, ag_chain):
     """
     Extracting the data from PDB files.
@@ -396,5 +390,3 @@ def get_pdb_structure_without_ag(pdb_file_name, ab_h_chain, ab_l_chain):
                         #residue.add_atom(atom)
                         model.add_residue(residue, cdr_name)
     return cdrs
-
-f = open('chains.txt','w')

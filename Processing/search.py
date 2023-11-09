@@ -1,17 +1,9 @@
-"""
-Class NeighbourSearch is used to determine ground truth and neighbourhoods for antibody amino acids
-"""
 from __future__ import print_function
 from scipy import spatial
 import numpy as np
 
 from Processing.parsing import Atom
 from Processing.constants import *
-"""
-Class NeighbourSearch is used to determine ground truth and neighbourhoods for antibody amino acids
-"""
-
-from scipy import spatial
 
 
 class NeighbourSearch(object):
