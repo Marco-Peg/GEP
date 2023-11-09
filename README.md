@@ -1,4 +1,5 @@
-# Epitope_prediction
+# Geometric Paratope Epitope Prediction
+Official repository of the paper "Geometric Epitope and Paratope Prediction"
 
 ## Environement
 
@@ -64,29 +65,6 @@ For each pdb in the folder, a .wrl will be saved in the destination folder. Then
 - surface_normal.p: the normal for each vertex
 - surface_feats.p: the features on each vertex
 - surface_lbls.p: the ground truth labels for each vertex
-
-### Data
-
-Contains all the Necessary pdb downloaded form the Sabdadata
-base (http://opig.stats.ox.ac.uk/webapps/newsabdab/sabdab/search/?all=true). Link to the Epipred
-paper (https://pubmed.ncbi.nlm.nih.gov/24753488/).
-
-#### Trainning Set:
-
-Contains the orginal Train fro epipred (train_epipred.csv) as well as a modifed trainning set to go with the created
-validation set (train_epitope.csv). It also contains a csv with both training and testing set from epipred.
-
-#### Validation Set:
-
-Created a validation set because Epipred does not have one.
-    
-#### Test Set: 
-From the epipred test set.
-
-# Data analysis
-We made a colab where you can analys the data and surfaces generated.
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1G9REEzNBiqot4-tg9srxj8BFWm-OEd6c?usp=sharing)
-https://colab.research.google.com/github/ClementineDomine/Epitope_prediction/blob/Marco/Surface_geom.ipynb
 
 ## EpiEpmp 
   
