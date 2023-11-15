@@ -1,4 +1,6 @@
-# OS: MacOS
+# OS: linux
+name: OGEP
+
 channels:
   - pytorch
   - conda-forge
@@ -6,23 +8,23 @@ channels:
   - pyg
   - plotly
   - schrodinger
-  - plotly
 dependencies:
   - python=3.8.*
   - pip
-  - pytorch = 1.12.0
+  - cudatoolkit=11.3
+  - pytorch
   - torchvision
   - torchaudio
-  - tqdm
   - torchmetrics
-  - plotly=5.10.0
+  - tqdm
+  - plotly
   - pip:
       - robust-laplacian
       - potpourri3d
   - scikit-learn
   - wandb
   - torchinfo
-  - pandas
-  - biopython
+  # - pandas
+  # - biopython
   - networkx
   - igl

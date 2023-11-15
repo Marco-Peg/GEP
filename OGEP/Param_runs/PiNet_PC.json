@@ -48,14 +48,5 @@
     "accuracy",
     "precision",
     "recall"
-  ],
-  "wandb_on": true,
-  "wandb_data": {
-    "project": "Epitope_geom2",
-    "entity": "epitope_prediction",
-    "name": "",
-    "tags": [],
-    "notes": "PiNet: ",
-    "policy": "now"
-  }
+  ]
 }

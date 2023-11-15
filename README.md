@@ -1,77 +1,83 @@
 # Geometric Paratope Epitope Prediction
 Official repository of the paper "Geometric Epitope and Paratope Prediction"
 
+![](/figure/featured.png "")
+
 ## Environement
 
-To run polymol on docker, first you need to run this line on the terminal
+### IGEP
+To create the IGEP environment, run the following command:
 
+```bash
+conda create -n IGEP python=3.8.* pip
+conda activate IGEP
+./env_IGEP.sh
 ```
+
+### OGEP 
+To create the OGEP environment, run the following command:
+
+```bash
+conda env create -f env_OGEP.yml
+```
+
+To run polymol, first you need to run this line on the terminal
+
+```bash
 apt-get update && apt-get install libgl1
 ```
 
 ## Preprocessing
+To replicate the results of the paper, we downloaded all the necessary pdb form the Sabdab database (http://opig.stats.ox.ac.uk/webapps/newsabdab/sabdab/search/?all=true). See also Epipred (https://pubmed.ncbi.nlm.nih.gov/24753488/) for more details.
 
-Run the processe_features to go from the pdb to pdb_l, pdb_r.  
-The pdb pdb_l, pdb_r contains the antigene and the antibody respectiivally.
+### Residues
+To process the pdb files and obtain the input features and graph representation, run the following command:
 
-Run the Processing_features.py to go from the pdb to pdb_l, pdb_r and pickle that contains the processed data. You
-should only need to modify the path and the name of the csv to the data you are interested in processing. The processed
-data contains the
+```bash
+python Processing/process_features.py --path data/with/pdb/files --csv_name csv_file.csv
+```
+where --path specify the path with the pdb files and --csv_name the name of the csv file with the pdb to process.
+The script will generate a processed-dataset.p pickle file with the processed data.
 
-### Antibody (CDR)
-
-- feature_cdr:  A list of size number of cdr containing tensors with size (nbr of ag residue, nbr of features). The
-  features are one hot, aa (nbr of features=28).
-
-- coords_cdr : A list of size number of cdr containing the 3D coordinates of the residuals
-- centers_cdr: List of the 3D coordinates of the center of the molecules
-- atoms_cdr: List of the 3D coordinates of the atom of the cdr region. The atoms are grouped by residuals
-- atoms_ab: List of the 3D coordinates af all the atoms in the antibody saved as numpy ndarray of size n_atoms x 3.
-- atoms_cdr_distances : List of distance from each cdr atoms to the nearest atom in the ab
-
-- edges_cdr: A list of size number of cdr containing the edges of each cdr in a tensors of size (nbr of edges, 2).
-
-- lenghts_cdr:  A liste of the number of residue in each cdr (nbr of cdr residue,).
-
-- lbls_cdr: Residues in contact with ag (nbr of cdr residue,).
-
-### Antigene (AG)
-
-feature_ag: A list of size number of ag containing tensors with size (nbr of cdr residue, nbr of features). The features
-are one hot, aa (nbr of features=28).
-
-- coords_ag : A list of size number of ag containing the 3D coordinates of the residuals
-- centers_ag : List of the 3D coordinates of the center of the molecules
-- atoms_ag:  List of the 3D coordinates of the atom of the cdr region. The atoms are grouped by residuals
-- atoms_ag_distances : List of distance from each ag atoms to the nearest atom in the ab
-- edges_ag: A list of size number of ag containing the edges of each ag in a tensors of size (nbr of edges, 2).
-- length_ag: A liste of the number of residue in each ag (nbr ag residue,).
-
-- lbls_ag: Residues in contact with cdr (nbr of ag residue,).
-
-### Surface features
-
+### Surface
 To compute the surface and then transfer the features on it run:
 
+```bash
+python Processing/pdb2surface.py --pdb-folder data/with/pdb/files --dest-folder data/with/wrl/files
+``` 
+where --pdb-folder specify the path with the pdb files and the processed data pickle file, while --dest-folder the path where to save the wrl files.
+
+## IGEP
+To run the IGEP model, run the following command:
+
+``` bash
+conda activate IGEP
+python train_IGEP.py --json-file params.json --json-keys common EPMP
 ```
-python pdb2surface.py --pdb-folder --dest-folder
+where --json-file specify the path with the json file with the parameters and --json-keys the keys of the parameters to use.
+
+You can test the results using the notebook test_IGEP.ipynb.
+
+## OGEP
+To run the OGEP model, run the following command:
+
+``` bash
+conda activate OGEP
+python train_OGEP.py -p params.json --model diffNet
+```
+where -p specify the path with the json file with the parameters and --model the model to use (PiNet, diffNet).
+
+You can test the results using the notebook test_OGEP.ipynb.
+
+## Cite
+If you use this code, please cite the following paper:
+
+```bibtex
+@article{pegoraro2023geometric,
+  title={Geometric Epitope and Paratope Prediction},
+  author={Pegoraro, Marco and Domin{\'e}, Cl{\'e}mentine and Rodol{\`a}, Emanuele and Veli{\v{c}}kovi{\'c}, Petar and Deac, Andreea},
+  journal={bioRxiv},
+  year={2023},
+}
 ```
 
-For each pdb in the folder, a .wrl will be saved in the destination folder. Then it will save the data in pickels files:
-
-- surfaces_points.p: the 3D coordinates
-- surface_faces.p: the triangulation of each surface
-- surface_color.p: the color produced by PyMol for each vertex
-- surface_normal.p: the normal for each vertex
-- surface_feats.p: the features on each vertex
-- surface_lbls.p: the ground truth labels for each vertex
-
-## EpiEpmp 
-  
-This runs only the epitope prediction of the EPMP (https://arxiv.org/pdf/2106.00757.pdf).
-Run the run test_file.
-
-
-## Pi-Diff-Net
-    
-Run ...

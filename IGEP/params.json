@@ -1,8 +1,8 @@
 {
   "common": {
-    "train_path": "../Data/data_epipred/data_train/processed-dataset.p",
-    "test_path": "../Data/data_epipred/data_test/processed-dataset.p",
-    "val_path": "../Data/data_epipred/data_val/processed-dataset.p",
+    "train_path": "/Data/data_epipred/data_train/processed-dataset.p",
+    "test_path": "/Data/data_epipred/data_test/processed-dataset.p",
+    "val_path": "/Data/data_epipred/data_val/processed-dataset.p",
     "epochs": 500,
     "runs": 5,
     "seeds": [
@@ -20,12 +20,6 @@
       "recall"
     ]
   },
-  "debug": {
-    "wandb_on": false,
-    "epochs": 3,
-    "runs": 2,
-    "cpu": true
-  },
   "lr": {
     "lr": 0.001,
     "sub_lr": 0.00001
@@ -40,16 +34,6 @@
   },
   "EPMP": {
     "path": "EPMP",
-    "model": "EpiEPMP",
-    "feats": [
-      "bio"
-    ],
-    "centered": false,
-    "wandb_name": "",
-    "wandb_tags": []
-  },
-  "EPMP_center": {
-    "path": "EPMP_center",
     "model": "EpiEPMP",
     "feats": [
       "bio",

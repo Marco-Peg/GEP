@@ -1,8 +1,6 @@
 from __future__ import print_function
 from scipy import spatial
-import numpy as np
 
-from Processing.parsing import Atom
 from Processing.constants import *
 
 

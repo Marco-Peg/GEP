@@ -87,7 +87,7 @@ def parse_params():
                         type=str, help='destination folder where to save the wrl files')
     parser.add_argument('-t', '--pdb-type', default=None,
                         help="extension of the pdb to process: ag or cdr. If not specied, compute the surfaces of all the pdb in the folder")
-    parser.add_argument('-w', '--wrl', default=True * False,
+    parser.add_argument('-w', '--wrl', default=True,
                         help="compute wrl files")
     parser.add_argument('-p', '--pickle', default=True,
                         help="generate pickle files from wrl")
