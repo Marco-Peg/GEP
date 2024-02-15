@@ -31,7 +31,7 @@ apt-get update && apt-get install libgl1
 To replicate the results of the paper, we downloaded all the necessary pdb form the Sabdab database (http://opig.stats.ox.ac.uk/webapps/newsabdab/sabdab/search/?all=true). See also Epipred (https://pubmed.ncbi.nlm.nih.gov/24753488/) for more details.
 
 ## Data
-You can download the data from [here]((https://drive.google.com/file/d/1BugJmGU6-AI3wDNh9YdCBHA4WprrLG7z/view?usp=sharing)). 
+You can download the data from [here](https://drive.google.com/file/d/1BugJmGU6-AI3wDNh9YdCBHA4WprrLG7z/view?usp=sharing). 
 
 ### Residues
 To process the pdb files and obtain the input features and graph representation, run the following command:
