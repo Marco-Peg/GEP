@@ -217,18 +217,21 @@ class epiapbsconDataset(ShapeNetDataset3):
 
 ## data epipred ##
 class epipredDataset(data.Dataset):
-    """ EpiPred dataset
-    """
-
-    def __init__(self, split="validation", as_mesh=True, npoints=0, centered=True, data_augmentation=False,
+    def __init__(self, data_dir = None, split="validation", as_mesh=True, npoints=0, centered=True, data_augmentation=False,
                  features=["bio"], hks_dim=16, get_faces=False,
                  need_operators=False, k_eig=128, precompute_data=False,
                  device=torch.device("cpu"), dtype=torch.float64, load_submesh=False, load_residuals=False,
                  **kwargs):
-        data_splits = {"train": "train", "test": "test", "validation": "val"}
-        if split not in list(data_splits.keys()):
-            raise ValueError(f"{split} is not a valid split. Options are {data_splits.keys()}")
-        self.root = os.path.join("Data", "data_epipred", "data_" + data_splits[split])
+        if data_dir is None:
+            data_splits = {"train": "train_pecan", "validation": "val_pecan", 
+                           "val_unbound": "val_pecan_unbound_aligned", "val_aligned": "val_pecan_aligned",}
+            if split not in list(data_splits.keys()):
+                raise ValueError(f"{split} is not a valid split. Options are {data_splits.keys()}")
+            self.root = os.path.join("Data", "data_epipred", data_splits[split] )
+        else:
+            self.root = data_dir
+
+        self.subset = None
 
         self.as_mesh = as_mesh
         self.get_faces = get_faces
@@ -256,11 +259,8 @@ class epipredDataset(data.Dataset):
 
 
     def load_data(self):
-        """ Load the data
-        """
-
         # vertices
-        with open(os.path.join(self.root, f"surfaces_points{'_' + str(self.npoints) if self.load_submesh else ''}.p"),
+        with open(os.path.join(self.root, f"surfaces_points{ self.subset if  self.subset is not None else ''}{'_' + str(self.npoints) if self.load_submesh else ''}.p"),
                   "rb") as f:
             self.verts = pickle.load(f)
             for mol in ["cdr", "ag"]:
@@ -275,7 +275,7 @@ class epipredDataset(data.Dataset):
         # faces
         if self.as_mesh:
             with open(
-                    os.path.join(self.root, f"surfaces_faces{'_' + str(self.npoints) if self.load_submesh else ''}.p"),
+                    os.path.join(self.root, f"surfaces_faces{ self.subset if  self.subset is not None else ''}{'_' + str(self.npoints) if self.load_submesh else ''}.p"),
                     "rb") as f:
                 self.faces = pickle.load(f)
                 # self.ab_faces = all_face["cdr"]  # list of numpy array
@@ -285,31 +285,32 @@ class epipredDataset(data.Dataset):
         # features
         if "bio" in self.features:
             with open(
-                    os.path.join(self.root, f"surfaces_feats{'_' + str(self.npoints) if self.load_submesh else ''}.p"),
+                    os.path.join(self.root, f"surfaces_feats{ self.subset if  self.subset is not None else ''}{'_' + str(self.npoints) if self.load_submesh else ''}.p"),
                     "rb") as f:
                 self.feats = pickle.load(f)
                 for mol in ["cdr", "ag"]:
                     for i_v in range(len(self.feats[mol])):
                         self.feats[mol][i_v] = self.feats[mol][i_v].to(self.dtype)
         # lbls
-        with open(os.path.join(self.root, f"surfaces_lbls{'_' + str(self.npoints) if self.load_submesh else ''}.p"),
+        with open(os.path.join(self.root, f"surfaces_lbls{ self.subset if  self.subset is not None else ''}{'_' + str(self.npoints) if self.load_submesh else ''}.p"),
                   "rb") as f:
             self.labels = pickle.load(f)
         # nn
-        with open(os.path.join(self.root, f"surfaces_nn{'_' + str(self.npoints) if self.load_submesh else ''}.p"),
+        with open(os.path.join(self.root, f"surfaces_nn{ self.subset if  self.subset is not None else ''}{'_' + str(self.npoints) if self.load_submesh else ''}.p"),
                   "rb") as f:
             self.nn = pickle.load(f)
         # residuals
         if self.load_residuals:
-            with open(os.path.join(self.root, f"processed-dataset.p"), "rb") as f:
+            with open(os.path.join(self.root, f"processed-dataset{ '_' + self.subset if  self.subset is not None else ''}.p"), "rb") as f:
                 res_dataset = pickle.load(f)
+                
                 self.residuals = {"lbls_ab_res": res_dataset["lbls_cdr"],
                                   "lbls_ag_res": res_dataset["lbls_ag"], }
+                self.names = res_dataset["pdb"]
+                
+                
 
     def precompute(self, use_cache=True):
-        """ Precompute the operators
-        """
-
         # Precompute operators
         if self.need_operators:
             self.op_cache_dir = os.path.join(self.root, "op_cache") if use_cache else None
@@ -340,9 +341,6 @@ class epipredDataset(data.Dataset):
         raise NotImplementedError("Non implemented")
 
     def get_feats(self, index, type="bio", mol="ag", choice=None, **kwargs):
-        """ Get the features
-        """
-
         if type == "bio":
             if choice is None:
                 return self.feats[mol][index]
@@ -371,9 +369,6 @@ class epipredDataset(data.Dataset):
             return compute_hks_autoscale(kwargs["evals"], kwargs["evecs"], kwargs["hks_dim"])
 
     def __getitem__(self, index):
-        """ Get the item
-        """
-
         out_data = {"ab_verts": self.verts["cdr"][index], "ag_verts": self.verts["ag"][index],
                     "ab_labels": self.labels["cdr"][index], "ag_labels": self.labels["ag"][index]}
         # cdr mask
@@ -385,7 +380,10 @@ class epipredDataset(data.Dataset):
                              "nearest_res_ag": torch.tensor(self.nn["ag"][index]["nearest_res"], dtype=int),
                              "lbls_ab_res": self.residuals["lbls_ab_res"][index],
                              "lbls_ag_res": self.residuals["lbls_ag_res"][index],
+                             "name": self.names[index]
                              })
+            out_data.update({"res_mask_ab": torch.tensor(np.unique(self.nn["cdr"][index]["nearest_res"])[1:], dtype=int),
+                                "res_mask_ag": torch.tensor(np.unique(self.nn["ag"][index]["nearest_res"]), dtype=int)})
 
         choice_ab = None
         choice_ag = None
@@ -486,9 +484,52 @@ class epipredDataset(data.Dataset):
 
     def __len__(self):
         return len(self.verts["cdr"])
+    
+class AFDataset(epipredDataset):
+    def __init__(self, data_dir = None, split=None, as_mesh=True, npoints=0, centered=True, data_augmentation=False,
+                 features=["bio"], hks_dim=16, get_faces=False,
+                 need_operators=False, k_eig=128, precompute_data=False,
+                 device=torch.device("cpu"), dtype=torch.float64, load_submesh=False, load_residuals=False,
+                 **kwargs):
+        if data_dir is None:
+            data_splits = {"max70": ("gt_pdbs", "70"),
+                           "GT_acc": ("gt_pdbs", "acc"), "GT_hm": ("gt_pdbs", "hm"),
+                           "AF_acc": ("af_acc_aligned", None), "AF_hm": ("af_hm_aligned", None),
+                            "GT_accmax": ("gt_pdbs",  "accmax"), "GT_hmmax": ("gt_pdbs",  "hmmax"),
+                           "AF_accmax": ("af_acc_aligned_max", None), "AF_hmmax": ("af_hm_aligned_max", None)}
+            self.root = os.path.join("Data", "AF", data_splits[split][0])
+            self.subset = data_splits[split][1]
+        else:
+            self.root = data_dir
+            self.subset = split
+
+
+        self.as_mesh = as_mesh
+        self.get_faces = get_faces
+
+        self.centered = centered
+        self.npoints = npoints  # if 0, then no subsampling
+        self.load_submesh = load_submesh and self.npoints > 0
+        self.load_residuals = load_residuals
+        self.data_augmentation = data_augmentation  # rotation
+
+        self.features = features
+        self.hks_dim = hks_dim
+
+        self.need_operators = need_operators
+        self.k_eig = k_eig
+
+        self.device = device
+        self.dtype = dtype
+
+        self.load_data()
+
+        self.precomputed = False
+        if precompute_data:
+            self.precompute()
 
 class datasetCreator():
-    datasets = {"epiapbscon": epiapbsconDataset, "epipred": epipredDataset, }
+    datasets = {"epiapbscon": epiapbsconDataset, "epipred": epipredDataset, "AF": AFDataset}
 
     @staticmethod
     def get_dataset(name, **kwargs):

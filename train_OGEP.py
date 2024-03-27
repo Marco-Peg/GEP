@@ -41,6 +41,8 @@ def parse_params():
     parser.add_argument('-p', '--params-files', dest='params_file', default='Param_runs/diffNet_mesh_split.json',
                         type=str, help='json file containing the params of the training')
     parser.add_argument("--model", default=f"diffNet", type=str)
+    parser.add_argument('--dataset-test', default='AF',)
+    parser.add_argument('--dataset-test-split', default='max70', type=str)
     parser.add_argument('-s', '--seed', default=42, type=int, help='random seed')
     args = parser.parse_args()
 
@@ -199,7 +201,7 @@ if __name__ == "__main__":
                         "hks_dim": params["hks_dim"], "load_submesh": True, 'load_residuals': True, "get_faces": True,
                         "need_operators": True, "precompute_data": params["precompute_data"]}
     for split in dataset.keys():
-        dataset[split] = datasetCreator.get_dataset(dataset_name, split=split, dtype=dtype, **dataset_params)
+        dataset[split] = datasetCreator.get_dataset(args.dataset_test, split=args.dataset_test_split, dtype=dtype, **dataset_params)
         dataset_loader[split] = DataLoader(dataset[split], batch_size=batchSize, shuffle=split == "train",
                                             collate_fn=collate_None)
     model.to(device)

@@ -11,8 +11,8 @@ from pymol import cmd  # ,stored
 from sklearn.neighbors import NearestNeighbors
 from tqdm import tqdm
 
-from Processing_features import open_dataset
-from utils_surface.wrl_parse import read_wrl2
+from Processing.Processing_features import open_dataset
+from Processing.utils_surface.wrl_parse import read_wrl2
 
 
 def load_pickle(file_path):
@@ -63,6 +63,9 @@ def res_surface_correspondences(atoms_coords, sur_coords, resid, res_atoms_indic
     """
     # find the atom nearest to the surface,
     # then transfer the feature of the residual associated to the atom to the atom's surface points
+
+    # atoms_coords = np.concatenate(res_atoms, 0)
+    # resid = np.concatenate([np.full((l.shape[0],), i) for i, l in enumerate(atoms_coords)], 0)
     nbrs = NearestNeighbors(n_neighbors=1).fit(atoms_coords)
     dists, nearest_atom = nbrs.kneighbors(sur_coords)  # (n_surf,1),(n_surf,1)
     nearest_atom = np.squeeze(nearest_atom)  # surface -> atoms
@@ -75,19 +78,39 @@ def res_surface_correspondences(atoms_coords, sur_coords, resid, res_atoms_indic
             nearest_res[i_points_cdr] = resid[i_cdr]
     else:
         nearest_res = resid[nearest_atom]  # surface -> residuals
+        # dists_res = dists[nearest_atom] # surface -> residuals
 
     return nearest_res, nearest_atom, dists
 
 
+def check_labels(nearest_res, res_atoms, gt_labels):
+    # sanity check: does every residual have a point on the surface?
+    sub_res = np.unique(nearest_res)
+    out_indices = []
+    removed_gt = []
+    if sub_res.size != len(res_atoms):
+        print(f"Warning: {len(res_atoms) - sub_res.size} residual are not represented on the surface")
+        out_indices = np.setdiff1d(np.arange(len(res_atoms)), sub_res)
+        removed_gt = np.array(out_indices[np.argwhere(gt_labels[out_indices].numpy()).squeeze()],
+                              dtype=int, ndmin=1)
+        if len(removed_gt) > 0:
+            print(f"You are removing {len(removed_gt)} gt residuals: {removed_gt}")
+    return out_indices, removed_gt
+
+
 def parse_params():
     parser = argparse.ArgumentParser(description='Compute surface from pdb.')
-    parser.add_argument('-pf', '--pdb-folder', dest='pdb_folder', default='../Data/data_epipred/data_train',
+    parser.add_argument('-pf', '--pdb-folder', dest='pdb_folder', default= 'Data/AF/af_hm_aligned/',  # 'Data/AF/af_acc_aligned/' Data/data_epipred/val_pecan_unbound_aligned/'
                         type=str, help='folder containing the pdb to process')
-    parser.add_argument('-df', '--dest-folder', dest='dest_folder', default='../Data/data_epipred/data_val/wrl',
+    parser.add_argument('-df', '--dest-folder', dest='dest_folder', default='Data/AF/af_hm_aligned/wrl',
                         type=str, help='destination folder where to save the wrl files')
+    parser.add_argument('--processed-file', default='processed-dataset',
+                        help="processed dataset file")
+    parser.add_argument('--subset', default=None, 
+                        help='subset of the dataset to process')
     parser.add_argument('-t', '--pdb-type', default=None,
                         help="extension of the pdb to process: ag or cdr. If not specied, compute the surfaces of all the pdb in the folder")
-    parser.add_argument('-w', '--wrl', default=True,
+    parser.add_argument('-w', '--wrl', default=True, #* False,
                         help="compute wrl files")
     parser.add_argument('-p', '--pickle', default=True,
                         help="generate pickle files from wrl")
@@ -109,11 +132,16 @@ if __name__ == "__main__":
         # compute and save the wrl for each pdb
         print("Generating wrl from folder: {}".format(args.pdb_folder))
         temp_file = os.path.join(args.dest_folder, "temp.wrl")
-        list_files = list(glob.iglob(os.path.join(
-            args.pdb_folder, "*{}.pdb".format("" if args.pdb_type is None else "_" + args.pdb_type))))
+        # list_files = list(glob.iglob(os.path.join(
+        #     args.pdb_folder, "*{}.pdb".format("" if args.pdb_type is None else "_" + args.pdb_type))))
+        list_files = list(glob.iglob(os.path.join( args.pdb_folder, "*_ag.pdb"))) + \
+                        list(glob.iglob(os.path.join( args.pdb_folder, "*_cdr.pdb")))
         for f in tqdm(list_files):
             # print("\t",os.path.split(f)[1])
             pdb_name = os.path.split(f)[1][:-4]
+            dest_off = os.path.join(args.dest_folder, os.path.split(f)[1][0:-4] + '.off')
+            if os.path.exists(dest_off):
+                continue
             tqdm.write("\t" + pdb_name)
             pdb2wrl(f, temp_file)
             coord, face, color, normal = read_wrl2(temp_file)
@@ -132,10 +160,10 @@ if __name__ == "__main__":
                 SV, SF, IM, J = igl.remove_unreferenced(SV, SF)
                 SC = color[J, :]
 
-            dest_off = os.path.join(args.dest_folder, os.path.split(f)[1][0:-4] + '.off')
+            
             igl.write_off(dest_off, SV, SF, SC)
 
-    # generate the pickle files with the coordinates
+            # generate the pickle files with the coordinates
     if args.pickle:
         if not os.path.exists(args.dest_folder):
             raise NotADirectoryError(args.dest_folder + " is not a folder")
@@ -145,40 +173,51 @@ if __name__ == "__main__":
         all_color = {"cdr": [], "ag": []}
         all_normal = {"cdr": [], "ag": []}
         all_pdb = []
-        dataset = open_dataset(os.path.join(args.pdb_folder, "processed-dataset.p"))
+        processed_path = os.path.join(args.pdb_folder, args.processed_file)
+        if args.subset is not None:
+            processed_path += '_' + args.subset
+        processed_path += ".p"
+        dataset = open_dataset(processed_path)
         for i_pdb in tqdm(range(len(dataset['pdb']))):
             pdb_name = dataset['pdb'][i_pdb]
             f = os.path.join(args.dest_folder, f"{pdb_name}_cdr.off")
             tqdm.write("\t" + pdb_name)
             all_pdb.append(pdb_name)
             # cdr
+            # coord, face, color, normal = read_wrl2(f)
             coord, face, color = igl.read_off(f)
             all_coord["cdr"].append(torch.tensor(coord))
             all_face["cdr"].append(torch.tensor(face))
             all_color["cdr"].append(torch.tensor(color))
+            # all_normal["cdr"].append(torch.tensor(normal))
             # ag
             f_ag = os.path.join(os.path.split(f)[0], f"{pdb_name}_ag.off")
+            # coord, face, color, normal = read_wrl2(f_ag)
             coord, face, color = igl.read_off(f_ag)
             all_coord["ag"].append(torch.tensor(coord))
             all_face["ag"].append(torch.tensor(face))
             all_color["ag"].append(torch.tensor(color))
+            # all_normal["ag"].append(torch.tensor(normal))
         print("done")
         # save as pickle
         print("Saving the pickles...", end='')
-        with open(os.path.join(args.pdb_folder, "surfaces_points.p"), "wb") as f:
+        with open(os.path.join(args.pdb_folder, f"surfaces_points{ args.subset if  args.subset is not None else ''}.p"), "wb") as f:
             pickle.dump(all_coord, f, protocol=2)
-        print(os.path.join(args.pdb_folder, "surfaces_points.p"))
-        with open(os.path.join(args.pdb_folder, "surfaces_faces.p"), "wb") as f:
+        print(os.path.join(args.pdb_folder, f"surfaces_points{ args.subset if  args.subset is not None else ''}.p"))
+        with open(os.path.join(args.pdb_folder, f"surfaces_faces{ args.subset if  args.subset is not None else ''}.p"), "wb") as f:
             pickle.dump(all_face, f, protocol=2)
-        print(os.path.join(args.pdb_folder, "surfaces_faces.p"))
-        with open(os.path.join(args.pdb_folder, "surfaces_color.p"), "wb") as f:
+        print(os.path.join(args.pdb_folder, f"surfaces_faces{ args.subset if  args.subset is not None else ''}.p"))
+        with open(os.path.join(args.pdb_folder, f"surfaces_color{ args.subset if  args.subset is not None else ''}.p"), "wb") as f:
             pickle.dump(all_color, f, protocol=2)
-        print(os.path.join(args.pdb_folder, "surfaces_color.p"))
+        print(os.path.join(args.pdb_folder, f"surfaces_color{ args.subset if  args.subset is not None else ''}.p"))
+        # with open(os.path.join(args.pdb_folder, "surfaces_normal.p"), "wb") as f:
+        #     pickle.dump(all_normal, f, protocol=2)
+        # print(os.path.join(args.pdb_folder, "surfaces_normal.p"))
         print("done")
 
         # transfer features from residuals to surface points
         print("Computing the features on the surface")
-        all_coord = load_pickle(os.path.join(args.pdb_folder, "surfaces_points.p"))
+        all_coord = load_pickle(os.path.join(args.pdb_folder, f"surfaces_points{ args.subset if  args.subset is not None else ''}.p"))
         wrl_pdbs = all_pdb
         all_feats = {"cdr": [], "ag": []}
         all_lbls = {"cdr": [], "ag": []}
@@ -193,6 +232,18 @@ if __name__ == "__main__":
             nearest_res_ag, nearest_atom_ag, dist_atom_ag = res_surface_correspondences(ag_coords,
                                                                                         all_coord["ag"][i_pdb],
                                                                                         resid)
+            res_coords = dataset["coords_ag"][i_pdb].numpy()
+            # nbrs = NearestNeighbors(n_neighbors=1).fit(dataset["coords_ag"][i_pdb])
+            # _, indices = nbrs.kneighbors(all_coord["ag"][i_pdb])
+            # indices = np.squeeze(indices)
+            # sanity check: does every residual have a point on the surface?
+            sub_indices = np.unique(nearest_res_ag)
+            if sub_indices.size != len(res_coords):
+                print(f"Warning: {len(res_coords) - sub_indices.size} residual are not represented on the surface")
+                out_gt = dataset["lbls_ag"][i_pdb][np.setdiff1d(np.arange(len(res_coords)), sub_indices)]
+                if out_gt.sum().item() > 0:
+                    # raise Exception(f"You are removing gt residuals from {pdb_name} ag")
+                    print(f"You are removing {out_gt.sum().item()} gt residuals from {pdb_name} ag")
             all_feats["ag"].append(dataset["features_ag"][i_pdb][nearest_res_ag, :])
             lbls_ag = dataset["lbls_ag"][i_pdb][nearest_res_ag]
             # add threshold of atoms
@@ -217,6 +268,14 @@ if __name__ == "__main__":
                                                                                            all_coord["cdr"][i_pdb],
                                                                                            resid,
                                                                                            res_atoms_indices=cdr_indices)
+            res_coords = dataset["coords_cdr"][i_pdb].numpy()
+            sub_indices = np.unique(nearest_res_cdr)
+            if sub_indices.size != len(res_coords):
+                print(f"Warning: {len(res_coords) - sub_indices.size} residual are not represented on the surface")
+                out_gt = dataset["lbls_cdr"][i_pdb][np.setdiff1d(np.arange(len(res_coords)), sub_indices)]
+                if out_gt.sum().item() > 0:
+                    # raise Exception(f"You are removing gt residuals from {pdb_name} cdrs")
+                    print(f"You are removing {out_gt.sum().item()} gt residuals from {pdb_name} cdrs")
             cdr_sur = np.nonzero(nearest_res_cdr != -1)[0]
             feats_cdr = np.zeros((all_coord["cdr"][i_pdb].shape[0], dataset["feature_cdr"][i_pdb].shape[1]))
             feats_cdr[cdr_sur, :] = dataset["feature_cdr"][i_pdb][nearest_res_cdr[cdr_sur], :]
@@ -239,15 +298,16 @@ if __name__ == "__main__":
                                   "dist_atom": dist_atom_cdr})
 
         print("Saving the features and labels...", end='')
-        with open(os.path.join(args.pdb_folder, "surfaces_feats.p"), "wb") as f:
+        with open(os.path.join(args.pdb_folder, f"surfaces_feats{ args.subset if  args.subset is not None else ''}.p"), "wb") as f:
             pickle.dump(all_feats, f, protocol=2)
-        print("Generated: ", os.path.join(args.pdb_folder, "surfaces_feats.p"))
-        with open(os.path.join(args.pdb_folder, "surfaces_lbls.p"), "wb") as f:
+        print("Generated: ", os.path.join(args.pdb_folder, f"surfaces_feats{ args.subset if  args.subset is not None else ''}.p"))
+        with open(os.path.join(args.pdb_folder, f"surfaces_lbls{ args.subset if  args.subset is not None else ''}.p"), "wb") as f:
             pickle.dump(all_lbls, f, protocol=2)
-        print("Generated: ", os.path.join(args.pdb_folder, "surfaces_lbls.p"))
-        with open(os.path.join(args.pdb_folder, "surfaces_nn.p"), "wb") as f:
+        print("Generated: ", os.path.join(args.pdb_folder, f"surfaces_lbls{ args.subset if  args.subset is not None else ''}.p"))
+        with open(os.path.join(args.pdb_folder, f"surfaces_nn{ args.subset if  args.subset is not None else ''}.p"), "wb") as f:
             pickle.dump(all_nn, f, protocol=2)
-        print("Generated: ", os.path.join(args.pdb_folder, "surfaces_nn.p"))
+        print("Generated: ", os.path.join(args.pdb_folder, f"surfaces_nn{ args.subset if  args.subset is not None else ''}.p"))
         print("done")
 
-    feats = load_pickle(os.path.join(args.pdb_folder, "surfaces_feats.p"))
+    feats = load_pickle(os.path.join(args.pdb_folder, f"surfaces_feats{ args.subset if  args.subset is not None else ''}.p"))
+    pass

@@ -1,7 +1,7 @@
 """
 Running cross-validation, processing results
 """
-import argparse
+
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 import pandas as pd
@@ -15,21 +15,22 @@ from sklearn.neighbors import NearestNeighbors
 
 from Processing.parsing import *
 from Processing.search import *
+from Processing.constants import aho_cdr_def, chothia_cdr_def
 
 
+path = 'Data/AF/af_hm_aligned/' # 'Data/AF/gt_pdbs/' 'Data/AF/af_acc_aligned/' val_pecan_unbound_aligned
+csv_name = 'Data/AF/hm_max.csv' # 'pdb_extra.csv'  # 'val_epitope.csv' Test.csv train_epitope.csv
+format_dataset =  'AF' # 'epipred' AF
+save_name = 'processed-dataset_max.p'
+cdr_numbering_scheme = chothia_cdr_def # aho_cdr_def, chothia_cdr_def
+
+PDBS_FORMAT = path + '{}.pdb'
 NUM_FEATURES = len(aa_s) + 7  # one-hot + extra features + chain one-hot
 AG_NUM_FEATURES = len(aa_s) + 7
 
 
 # example on how to open the processed data
 def open_dataset(dataset_cache="processed-dataset.p"):
-    """     Open the dataset
-
-    :param dataset_cache: path to the dataset cache
-    :return: dataset
-
-    """
-
     if exists(dataset_cache) and isfile(dataset_cache):
         print("Precomputed dataset found, loading...")
         with open(dataset_cache, "rb") as f:
@@ -38,32 +39,21 @@ def open_dataset(dataset_cache="processed-dataset.p"):
         raise Exception(f"No dataset cache found : {dataset_cache} ")
     return dataset
 
-def create_dataset(dataset_csv):
-    """    Create the dataset
+def run_cv(cache_file=csv_name, save_path=os.path.join(path, save_name) ,output_folder="pickle_test", num_iters=1000, ):
 
-    :param dataset_csv: path to the csv file containing the dataset
-    :return: dataset
-    """
+    dataset = create_dataset(cache_file, save_path)
 
+def create_dataset(dataset_csv, save_path):
     summary_file = pd.read_csv(dataset_csv)
-    cache_file = os.path.join(os.path.split(dataset_csv)[0], "processed-dataset.p")
-    print("Computing and storing the dataset...")
-    dataset = process_dataset(summary_file,path=os.path.split(dataset_csv)[0])
-    with open(cache_file, "wb") as f:
+    print("Computing and storing the dataset... ")
+    dataset = process_dataset(summary_file)
+    print(f"Saving {save_path}...")
+    with open(save_path, "wb") as f:
         pickle.dump(dataset, f, protocol=2)
 
     return dataset
 
 def get_pdb_structure_seperate(pdb_file_name, ab_h_chain, ab_l_chain, ag_chain):
-    """    Get the pdb structure
-
-    :param pdb_file_name: path to the pdb file
-    :param ab_h_chain: chain id of the heavy chain
-    :param ab_l_chain: chain id of the light chain
-    :param ag_chain: chain id of the antigen
-    :return: pdb structure
-    """
-
     in_file = open(pdb_file_name, 'r')
     print(pdb_file_name)
     f_ag = open(pdb_file_name[:-4] + '_ag' + '.pdb', "w")
@@ -98,26 +88,11 @@ def get_pdb_structure_seperate(pdb_file_name, ab_h_chain, ab_l_chain, ag_chain):
 
 
 def get_residuals_atoms(residauls_chains):
-    """   Get the atoms of the residues
-
-    :param residauls_chains: residues of the chains
-    :return: atoms of the residues
-    """
-
     for chain_key in residauls_chains:
         chain = residauls_chains(chain_key)
 
 
-def process_dataset(csv_file, path, max_cdr_length=MAX_CDR_LENGTH, max_ag_length=MAX_AG_LENGTH):
-    """    Process the dataset
-
-    :param csv_file: path to the csv file containing the dataset
-    :param path: path to the folder containing the dataset
-    :param max_cdr_length: maximum length of the cdr
-    :param max_ag_length: maximum length of the antigen
-    :return: dataset
-    """
-
+def process_dataset(csv_file):
     num_in_contact = 0
     num_residues = 0
     all_cdrs = []
@@ -142,7 +117,7 @@ def process_dataset(csv_file, path, max_cdr_length=MAX_CDR_LENGTH, max_ag_length
     all_epitope_lbls_distances = []
     all_pdbname = []
     all_max = 0
-    for cdrs_searchs, ag_search, cdrs_residuals, pdb, ag_residuals, complex_model in load_chains(csv_file, path):
+    for cdrs_searchs, ag_search, cdrs_residuals, pdb, ag_residuals, complex_model in load_chains(csv_file):
         print("Processing PDB ", pdb)
         # split pdb file in ag and ab
         complex_model.save_pdb_cdr(path)
@@ -225,39 +200,31 @@ def process_dataset(csv_file, path, max_cdr_length=MAX_CDR_LENGTH, max_ag_length
         "edges_cdr": all_edges_mat,
     }
 
-def load_chains(csv_file, path="data/"):
-    """ Load chains from csv file
-    :param csv_file: csv file containing the pdb names and chains
-    :param path: path to the pdb files
-    :return: cdrs_search, ag_search, cdrs, pdb_name, ag, model
-    """
-
-    PDBS_FORMAT = path + "{}.pdb"
+def load_chains(csv_file, format=format_dataset, cdr_regions=cdr_numbering_scheme):
     print("in load_chains")
     i=0
     for _, column in csv_file.iterrows():
-        pdb_name = column['pdb']
-        ab_h_chain = column['Hchain']
-        ab_l_chain = column['Lchain']
-        antigen_chain = column['antigen_chain']
-        cdrs_atoms, cdrs, ag_atoms, ag, ag_names, model = get_pdb_structure(PDBS_FORMAT.format(pdb_name), ab_h_chain,
-                                                                            ab_l_chain, antigen_chain)
+        if format == "epipred":
+            pdb_name = column['pdb']
+            ab_h_chain = column['Hchain']
+            ab_l_chain = column['Lchain']
+            antigen_chain = column['antigen_chain']
+        elif format == "AF":
+            pdb_name = column['pdb'] + '_' + column['Hchain'] + '_' + column['Lchain'] + '_' + column['antigen_chain'] 
+            ab_h_chain = 'A'
+            ab_l_chain = 'B'
+            antigen_chain = 'C'
+        path = PDBS_FORMAT.format(pdb_name)
+
+        cdrs_atoms, cdrs, ag_atoms, ag, ag_names, model = get_pdb_structure(path, ab_h_chain,
+                                                                            ab_l_chain, antigen_chain,
+                                                                            cdr_regions=cdr_regions)
         ag_search = NeighbourSearch(ag_atoms)  # replace this
         cdrs_search = NeighbourSearch(cdrs_atoms)
         yield cdrs_search, ag_search, cdrs, pdb_name, ag, model
         i = i + 1
 
 def complex_process_chains(ag_search, cdrs_search, cdrs, max_cdr_length, ag, max_ag_length):
-    """ Process chains to get the features
-    :param ag_search: NeighbourSearch object for the antigen
-    :param cdrs_search: NeighbourSearch object for the cdrs
-    :param cdrs: dictionary of the cdrs
-    :param max_cdr_length: maximum length of the cdrs
-    :param ag: dictionary of the antigen
-    :param max_ag_length: maximum length of the antigen
-    :return: features, labels, lengths, edges
-    """
-
     num_residues = 0
     num_in_contact = 0
     contact = {}
@@ -387,13 +354,6 @@ def complex_process_chains(ag_search, cdrs_search, cdrs, max_cdr_length, ag, max
 
 
 def compute_edges_cdr(cdrs):
-    """ Compute edges for CDRs
-    Args:
-        cdrs: list of cdrs
-    Returns:
-        edge_cdr_mat_list: list of edges for each cdr
-        """
-
     edge_cdr_mat_list = []
     add_l = 0
     for cdr_name in ["H1", "H2", "H3", "L1", "L2", "L3"]:
@@ -420,15 +380,6 @@ def compute_edges_cdr(cdrs):
 
 
 def compute_edges(coords, k=15, d=10, as_edges=True):
-    """ Compute edges for CDRs
-    :param coords: list of coordinates
-    :param k: number of nearest neighbors
-    :param d: distance threshold
-    :param as_edges: if True, return edges as a list of tuples
-
-    :returns: if as_edges is True,
-    """
-
     # Compute the pairwise Euclidean distances between points
     dists = torch.cdist(coords, coords)
 
@@ -458,11 +409,6 @@ def compute_edges(coords, k=15, d=10, as_edges=True):
 
 
 def compute_edges_ag(ag):
-    """ Compute edges for CDRs
-    :paramag: list of ag
-    :returns: edge_ag_mat_list: list of edges for each antigen
-    """
-
     edge_ag_mat_list = []
     add_l = 0
     for ag_name, ag_chain in ag.items():
@@ -488,10 +434,6 @@ def compute_edges_ag(ag):
 def residue_seq_to_one(seq):
     """
     Standard mapping from 3-letters amino acid type encoding to one.
-
-    :param seq: list of residues
-    :return: list of one-letter amino acid types
-
     """
     three_to_one = lambda r: Polypeptide.three_to_one(r.name) \
         if r.name in Polypeptide.standard_aa_names else 'U'
@@ -503,10 +445,6 @@ def one_to_number(res_str):
 
 
 def coords_atoms(atoms_list):
-    """ Get coordinates of atoms
-    :param atoms_list:  list of atoms
-    :return:    coords: coordinates of atoms
-    """
     coords = torch.ones((len(atoms_list), 3))
     for i, atom in enumerate(atoms_list):
         coords[i, :] = torch.tensor([atom.x_coord, atom.y_coord, atom.z_coord])
@@ -514,11 +452,6 @@ def coords_atoms(atoms_list):
 
 
 def coords(res_str):
-    """ Get coordinates of residues
-    :param res_str:  list of residues
-    :return:    coords: coordinates of residues
-    """
-
     res_coord = torch.ones((len(res_str), 3))
     i = 0
     atoms_res = list()
@@ -538,11 +471,6 @@ def coords(res_str):
     return res_coord, atoms_res
 
 def find_chain(cdr_name):
-    """ Find chain of CDR
-    :param cdr_name:  name of CDR
-    :return:    chain: chain of CDR
-    """
-
     if cdr_name == "H1":
         #print("H1")
         return [1, 0, 0, 0, 0, 0,]
@@ -602,11 +530,6 @@ def antigene_in_contact_with(res, c_search, dist):
 
 
 def seq_to_one_hot(res_seq_one, chain_encoding):
-    """     Convert sequence of amino acids to one-hot encoding
-    :param res_seq_one:     sequence of amino acids
-    :param chain_encoding:  encoding of chain
-    :return:            one-hot encoding of sequence
-    """
     ints = one_to_number(res_seq_one)
     if (len(ints) > 0):
         new_ints = torch.LongTensor(ints)
@@ -621,12 +544,6 @@ def seq_to_one_hot(res_seq_one, chain_encoding):
 
 
 def ag_seq_to_one_hot(agc):
-    """     Convert sequence of amino acids to one-hot encoding
-    :param res_seq_one:     sequence of amino acids
-    :param chain_encoding:  encoding of chain
-    :return:            one-hot encoding of sequence
-    """
-
     ints = one_to_number(agc)
     if (len(ints) > 0):
         new_ints = torch.LongTensor(ints)
@@ -638,10 +555,6 @@ def ag_seq_to_one_hot(agc):
         return None
 
 def aa_features():
-    """     Features of amino acids
-    :return:    features of amino acids
-    """
-
     # Meiler's features
     prop1 = [[1.77, 0.13, 2.43,  1.54,  6.35, 0.17, 0.41],
              [1.31, 0.06, 1.60, -0.04,  5.70, 0.20, 0.28],
@@ -667,14 +580,7 @@ def aa_features():
     return torch.Tensor(prop1)
 
 def to_categorical(y, num_classes):
-
-    """ Converts a class vector to binary class matrix.
-    E.g. for use with categorical_crossentropy.
-    :param y: class vector to be converted into a matrix
-    :param num_classes: total number of classes
-    :return: A binary matrix representation of the input.
-
-    """
+    """ Converts a class vector to binary class matrix. """
     new_y = torch.LongTensor(y)
     n = new_y.size()[0]
     categorical = torch.zeros(n, num_classes)
@@ -683,21 +589,7 @@ def to_categorical(y, num_classes):
     categorical[intaranged, new_y] = 1
     return categorical
 
-path = '../Data/data_epipred/data_val/'
-csv_name = 'val_epitope.csv'  # 'val_epitope.csv' Test.csv train_epitope.csv
-
-
 if __name__ == "__main__":
-    # define argparser to get path and csv name
-    parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument('--path', type=str, default='../Data/data_epipred/data_val/',
-                        help='path to data')
-    parser.add_argument('--csv_name', type=str, default='val_epitope.csv',
-                        help='name of csv file')
-    args = parser.parse_args()
-    path = args.path
-    csv_name = args.csv_name
-
-    create_dataset(path+csv_name)
-    dataset = open_dataset(path + "processed-dataset.p")
+    run_cv()
+    dataset = open_dataset(path + save_name)
     pass

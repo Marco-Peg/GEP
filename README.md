@@ -6,19 +6,12 @@ Official repository of the paper "Geometric Epitope and Paratope Prediction"
 ## Environement
 
 ### IGEP
-To create the IGEP environment, run the following command:
+To create the environment, run the following command:
 
 ```bash
-conda create -n IGEP python=3.8.* pip
-conda activate IGEP
-./env_IGEP.sh
-```
-
-### OGEP 
-To create the OGEP environment, run the following command:
-
-```bash
-conda env create -f env_OGEP.yml
+conda create -n GEP python=3.8.15 pip -y
+conda activate GEP
+./create_env.sh
 ```
 
 To run polymol, first you need to run this line on the terminal
@@ -54,7 +47,7 @@ where --pdb-folder specify the path with the pdb files and the processed data pi
 To run the IGEP model, run the following command:
 
 ``` bash
-conda activate IGEP
+conda activate GEP
 python train_IGEP.py --json-file params.json --json-keys common EPMP
 ```
 where --json-file specify the path with the json file with the parameters and --json-keys the keys of the parameters to use.
@@ -65,7 +58,7 @@ You can test the results using the notebook test_IGEP.ipynb.
 To run the OGEP model, run the following command:
 
 ``` bash
-conda activate OGEP
+conda activate GEP
 python train_OGEP.py -p params.json --model diffNet
 ```
 where -p specify the path with the json file with the parameters and --model the model to use (PiNet, diffNet).
